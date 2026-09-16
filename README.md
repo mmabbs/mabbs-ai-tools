@@ -1,4 +1,4 @@
-# mabbs-claude-tools
+# mabbs-ai-tools
 A small collection of skills I use in my own Claude workflow, cleaned up so anyone can install them. Each is a self-contained folder you copy into a skills directory (one, `research-auditor-desktop`, uploads to claude.ai/Desktop as a ZIP instead). No marketplace, plugin, or build step.
 
 New to Claude skills? Check out [Anthropic's docs on Claude Skills](https://code.claude.com/docs/en/skills)
