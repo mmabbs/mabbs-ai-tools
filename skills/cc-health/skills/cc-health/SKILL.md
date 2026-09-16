@@ -63,7 +63,7 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/cc-health-chats.py global
 
 For `full` mode, run each domain sequentially and aggregate findings. For the chats domain in `full` mode, run `scan`, `usage`, and `orphans` — never `clean`.
 
-**Chats output translation:** The chats scanner outputs its own legacy JSON format (a list of conversation objects), NOT the AuditReport schema used by other domains. When aggregating for `full` mode, do NOT treat chats output as Finding objects. Instead, summarize it as: conversation count, short-lived session count, orphan count, and total disk usage. Present this summary in a "Chats" section of the report alongside the other domains' finding tables.
+**Chats output translation:** The chats scanner outputs its own legacy JSON format (a list of conversation objects), NOT the AuditReport schema used by other domains. When aggregating for `full` mode, do NOT treat chats output as Finding objects. Instead, summarize it as: conversation count, short-lived session count, orphan count, custom-named project dirs (`custom_named_dirs`, if any), and total disk usage. Present this summary in a "Chats" section of the report alongside the other domains' finding tables.
 
 **Assets notes — trigger clash detection:** The assets scanner always checks for overlapping skill trigger descriptions using TF-IDF similarity. Pairs above the threshold (default 0.35, tunable via `--clash-threshold`) are flagged as:
 
@@ -126,9 +126,11 @@ Skip this step entirely unless `assets` was invoked with `--deep`:
 2. For each skill found, spawn an inline agent to check description drift:
    ```
    Agent({
+     subagent_type: "general-purpose",
      prompt: "Compare this skill's description frontmatter against what its body actually does. Does the description accurately represent the skill's behavior?\n\nDescription: <desc>\n\nBody:\n<body>\n\nRespond with JSON: {\"drifted\": bool, \"reason\": \"...\"}"
    })
    ```
+   If the session reports the general-purpose agent as unavailable, skip the drift check and note the skip in the report instead of failing the step.
 3. Add findings for skills where `drifted: true`.
 
 ### Step 5: Present report

@@ -470,13 +470,20 @@ def audit_projects() -> dict[str, Any]:
         if not project_dir.is_dir():
             continue
 
-        # Use smart path verification for better decode
-        exists, resolved_path = verify_path_exists(project_dir.name)
+        # Custom-named dirs (CLAUDE_CODE_PROJECT_DIR_NAME) are not encoded paths —
+        # don't decode or path-check them.
+        is_custom_named = not project_dir.name.startswith("-")
+        if is_custom_named:
+            exists, resolved_path = True, project_dir.name
+        else:
+            # Use smart path verification for better decode
+            exists, resolved_path = verify_path_exists(project_dir.name)
 
         project_info = {
             "encoded_path": project_dir.name,
             "decoded_path": resolved_path,
             "path_exists": exists,
+            "custom_named": is_custom_named,
             "size": 0,
             "conversation_count": 0,
             "last_activity": None,
@@ -580,7 +587,9 @@ def audit_orphans() -> dict[str, Any]:
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "orphans": [],
         "verified_existing": [],
-        "summary": {"total_orphaned_projects": 0, "total_orphaned_size": 0},
+        "custom_named_dirs": [],
+        "summary": {"total_orphaned_projects": 0, "total_orphaned_size": 0,
+                    "custom_named_dir_count": 0},
     }
 
     if not PROJECTS_DIR.exists():
@@ -589,6 +598,13 @@ def audit_orphans() -> dict[str, Any]:
 
     for project_dir in PROJECTS_DIR.iterdir():
         if not project_dir.is_dir():
+            continue
+
+        # Custom-named dirs (CLAUDE_CODE_PROJECT_DIR_NAME) are not encoded paths:
+        # encoded names always start with '-'. Informational only, never orphans.
+        if not project_dir.name.startswith("-"):
+            results["custom_named_dirs"].append(project_dir.name)
+            results["summary"]["custom_named_dir_count"] += 1
             continue
 
         # Use smart path verification
