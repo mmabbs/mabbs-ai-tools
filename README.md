@@ -74,4 +74,4 @@ Some skills assume a particular environment. Each skill's own `README.md` docume
 
 ## Maintenance and contributions
 
-These are tools I build and maintain for my own use. I make a genuine effort to review issues and pull requests, but I can't promise a response time or that I'll merge. Treat it as best-effort, not a supported product. Fork freely.
+These are tools I build and maintain for my own use. I make a genuine effort to review issues and pull requests, but I can't promise a response time or that I'll merge. Treat it as best-effort. Fork freely.
