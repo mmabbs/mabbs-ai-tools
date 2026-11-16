@@ -4,6 +4,8 @@ A placement auditor for your Claude Code configuration. It scans every config la
 
 It is most useful after a setup has grown organically: instructions duplicated between CLAUDE.md and rules, behavioral memories that should be rules, project-scoped config that belongs globally (or the reverse), procedures squatting in always-loaded files.
 
+For broken references, stale files, and cleanup, use [cc-health](../cc-health/) instead. This skill only judges placement.
+
 The workflow:
 
 1. Locates eight criteria docs that define what earns its keep in each config layer and the boundary tests between adjacent layers — read by the reasoning agent, not the orchestrator.
@@ -45,15 +47,15 @@ The workflow:
 | Component | Required? | Without it |
 | --- | --- | --- |
 | Claude Code with subagent (Agent tool) support | Required | The parallel scan can't run; the skill is built around scanner agents |
-| Access to Sonnet and Opus models | Optional | Scanners and reasoning fall back to your session model — results hold, cost/quality tuning is lost |
+| Access to Sonnet and Opus models | Optional | Scanners and reasoning run on your session model instead — the audit still works; the cost and quality tuning is lost |
 | A CLAUDE.md list of your project directories | Optional | The skill asks you which project directories to scan instead of discovering them |
 | Project `.claude/` directories | Optional | Projects without one are still scanned for memory and CLAUDE.md; the project-config layer is just empty |
 
 ## Installation
 
 ```bash
-git clone https://github.com/<your-fork>/<repo>.git
-cp -R <repo>/skills/config-audit ~/.claude/skills/config-audit
+git clone --depth 1 https://github.com/mmabbs/mabbs-ai-tools.git
+cp -R mabbs-ai-tools/skills/config-audit ~/.claude/skills/config-audit
 ```
 
 Restart Claude Code (or start a new session) and run `/config-audit`.
@@ -61,7 +63,7 @@ Restart Claude Code (or start a new session) and run `/config-audit`.
 ## Usage
 
 ```
-/config-audit                          # full sweep, findings in chat
+/config-audit                          # full sweep; findings open in a file
 /config-audit project <name>           # one project + global config
 /config-audit save <dir>               # write findings to a dated note
 /config-audit project <name> save <dir>
@@ -99,6 +101,9 @@ Findings quality depends on how much config you actually have — a fresh setup 
 
 - The reasoning agent is no longer pinned to max effort.
 - Archived originals go to a folder you choose (`<archive-folder>`) instead of a fixed path.
+- The docs now agree with the skill: findings open in a temporary file with a one-line summary in chat, and `save <dir>` keeps a copy.
+- Scanners and the reasoning agent run on your session model when Sonnet or Opus isn't available.
+- The install command uses the real repository URL.
 
 ### 2026-07-19
 

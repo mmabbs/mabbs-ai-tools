@@ -12,11 +12,11 @@ This skill is most valuable after a setup has accumulated organically — after 
 
 ## Arguments
 
-`/config-audit` — full sweep across all projects, present findings in chat.
+`/config-audit` — full sweep across all projects. Findings open in a file; chat gets a one-line summary.
 
 `/config-audit project <name>` — scan only the named project's configs (plus global, since global affects every project). Skips other projects' `.claude/`, memory, and CLAUDE.md files.
 
-`/config-audit save <to/path>` — write findings to a timestamped note in the specified directory instead of chat.
+`/config-audit save <to/path>` — write findings to a timestamped note in the specified directory instead of the temporary file.
 
 Arguments compose: `/config-audit project web-platform save <to/path>` scans one project and saves the findings.
 
@@ -68,7 +68,7 @@ The multi-project view is where the most valuable findings live — a global rul
 
 Spawn **one scanner agent per config type**, all in parallel (8 agents). Each scanner catalogs what exists in its layer **across all projects**. Scanners do not assess placement — they produce inventories. Reasoning happens in Phase 2.
 
-Use **Sonnet** for scanners — they're doing extraction, not synthesis.
+Use **Sonnet** for scanners — they're doing extraction, not synthesis. If Sonnet isn't available, run them on the session model.
 
 ### What Each Scanner Reads
 
@@ -95,7 +95,7 @@ Write inventories to `<scratchpad>/config-audit/`. `<scratchpad>` is the session
 
 ## Phase 2: Reason
 
-After all scanners complete, spawn a **single reasoning agent** on **Opus**. This agent reads all 8 inventory files plus all 8 criteria docs, produces findings, and writes them to `<workspace>/findings.md`.
+After all scanners complete, spawn a **single reasoning agent** on **Opus**. If Opus isn't available, run it on the session model. This agent reads all 8 inventory files plus all 8 criteria docs, produces findings, and writes them to `<workspace>/findings.md`.
 
 ### Reasoning Agent Prompt
 
@@ -103,7 +103,7 @@ The reasoning agent prompt template is in `references/reasoning-prompt.md`. Read
 
 ## Presenting Findings
 
-The reasoning agent writes its findings to `<workspace>/findings.md`. Don't repeat them in chat — open the file with the platform's default opener so the user can read it directly: `open <workspace>/findings.md` on macOS, `xdg-open` on Linux (substitute the equivalent on other platforms).
+The reasoning agent writes its findings to `<workspace>/findings.md`. Don't repeat them in chat — open the file with the platform's default opener so the user can read it directly: `open <workspace>/findings.md` on macOS, `xdg-open` on Linux (substitute the equivalent on other platforms). If no opener is available (a headless or SSH session), give the file path instead. The file is temporary: tell the user that `save <dir>` keeps a copy.
 
 After opening, give a one-line summary: finding counts by category and any `broken` items. Then ask which findings the user wants to act on. Nothing gets executed until they choose.
 
