@@ -21,15 +21,14 @@ New to Claude skills? Check out [Anthropic's docs on Claude Skills](https://code
 
 | Skill                                | What it does                                                                                                                                              | Notes                        |
 | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
-| [skill-critic](skills/skill-critic/) | Adversarial design review for your skills: a steelman argues against the design, a defender rates each criticism, a blind tester attempts a real task, and the synthesis proposes fixes. | Requires Opus · manual-only |
-| [skill-sanitizer](skills/skill-sanitizer/) | Takes a personal skill and produces a copy ready for public release — strips personal data, applies portability fixes, writes the public README, gates the repo move with a final sweep. | manual-only |
+| [sanitize-release](skills/sanitize-release/) | Turns a personal skill into a public copy: scans for secrets, private names, and portability problems, strips personal data, writes the README, runs an independent review, and gates the repo move. | manual-only · Opus · Python 3 |
 
 ### Claude Code setup
 
 | Skill                                    | What it does                                                                                                                                                          | Notes                          |
 | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
-| [cc-health](skills/cc-health/)           | Plugin that audits Claude Code infrastructure across 7 domains (chats, config, assets, memory, version compat, debris, temp files) with Python scanners and a SessionStart hook. | Plugin install · Opus for version domain |
-| [config-audit](skills/config-audit/)     | Audits every Claude Code config layer (rules, skills, hooks, plugins, MCP, memory, CLAUDE.md, agents) and recommends what to relocate, consolidate, or create.        | Spawns subagents · Opus recommended |
+| [cc-health](skills/cc-health/)           | Plugin that audits Claude Code infrastructure across 7 domains (chats, config, assets, memory, version compat, debris, temp files) with Python scanners and a SessionStart hook. Companion to the built-in `/doctor`. | Plugin install |
+| [config-audit](skills/config-audit/)     | Audits every Claude Code config layer (rules, skills, hooks, plugins, MCP, memory, CLAUDE.md, agents) across all your projects and recommends what to relocate, consolidate, or create. Picks up where `/doctor` stops. | Spawns subagents · Opus recommended |
 
 ### Local scene & monitoring
 
@@ -66,7 +65,6 @@ Some skills assume a particular environment. Each skill's own `README.md` docume
 - **Obsidian-coupled** — `events` and `ai-news` write notes into an Obsidian vault. The per-skill READMEs list what to change for your own vault, or how to run them standalone.
 - **Region-configurable** — `ai-news` and `events` default to Canadian and Toronto sources. Both document how to point them elsewhere.
 - **Bundled scripts** — `events` includes a cron wrapper shell script that expects `claude` on your PATH.
-- **Bundled agents** — `skill-critic` ships three agent definition files that must be copied to `~/.claude/agents/` (its README shows the exact step). They pin `claude-opus-4-6` deliberately — bump the pin on purpose, not via the auto-upgrading `opus` alias.
 - **Plugin install** — `cc-health` is a plugin, not a standalone skill. It requires the local plugin install flow (`claude plugin marketplace add` + `claude plugin install`). See its README for the full steps.
 - **Subagent-heavy** — `config-audit` spawns eight parallel scanner agents plus one reasoning agent per run. It targets Sonnet for scanning and Opus for the cross-layer reasoning; without those models it falls back to your session model.
 - **Desktop upload** — `research-auditor-desktop` is for claude.ai / Claude Desktop, not Claude Code: don't copy it into `~/.claude/skills/`. Rename the folder to `research-auditor` and upload it as a ZIP via Settings → Capabilities → Skills — its README has the exact packaging steps.

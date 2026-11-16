@@ -79,11 +79,11 @@ No external tools, APIs, or plugins needed.
 
 ```bash
 # Clone and copy
-git clone --depth 1 https://github.com/mmabbs/mabbs-claude-skills.git
-cp -r mabbs-claude-skills/skills/ideate ~/.claude/skills/
+git clone --depth 1 https://github.com/mmabbs/mabbs-claude-tools.git
+cp -r mabbs-claude-tools/skills/ideate ~/.claude/skills/
 
 # Or for project-scoped installation
-cp -r mabbs-claude-skills/skills/ideate .claude/skills/
+cp -r mabbs-claude-tools/skills/ideate .claude/skills/
 ```
 
 Claude Code detects new skills without a restart.

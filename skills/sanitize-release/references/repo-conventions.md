@@ -15,8 +15,10 @@ The paths, triage criteria, and gate checklist for this publishing pipeline. Thi
 
 ## Repo facts
 
-- **License is MIT, held once at repo root** with a NOTICE file. Skills do not carry their own LICENSE — delete per-skill license files during sanitization.
-- **`.gitignore` at repo root covers `.DS_Store` and `__pycache__/`.** Don't add per-skill gitignore files. The mechanical pass deletes these artifacts anyway — the gitignore is backstop, not cleanup.
+<!-- Configure: these describe one example repo. Edit each to match yours. -->
+
+- **License is `<your-license>`, held at `<license-location>`.** If your repo holds one license at its root, delete per-skill license files during sanitization. Otherwise keep each skill's license file. Never delete a license file that carries a third-party notice — ask the user first. If `<your-license>` or `<license-location>` is still a placeholder, keep every license file and ask.
+- **If your root `.gitignore` covers `.DS_Store` and `__pycache__/`, don't add per-skill gitignore files.** The mechanical pass deletes these artifacts anyway — the gitignore is backstop, not cleanup.
 - **The repo README lists every published skill.** Adding a skill means adding its row: name, one-line description, link to its folder — e.g., `| [skill-name](skills/skill-name/) | One-line description of what it does |`. If the table doesn't exist yet, create it with those two columns.
 
 ## Blockers and advisories
@@ -37,23 +39,24 @@ Name what needs building. Finish all sanitization work anyway so it's ready the 
 - **Built-in overlap.** Heavy overlap with a built-in or shipping feature — name the feature and the remaining gap.
 - **Unverifiable claims.** Core claims that verification can't support — flag them; the positioning rewrite in the judgment pass handles the wording.
 
-## Final sweep (the gate)
+## Final scan (the gate)
 
-Run over the staging copy before anything moves to the repo:
+Run `scripts/release_scan.py` over the staging copy before anything moves to the repo (SKILL.md, Stage 7).
 
-<!-- Configure: replace the name/path patterns with your own identifiers -->
+- **The private terms live outside the skill.** They are in `~/.config/leak-scan/private-terms`, never in this file or any file that ships. Add a term there the first time it turns up in public content.
+- **Every error gets resolved or justified out loud.** The scan finds candidates, not verdicts — "obsidian" in a genuinely Obsidian-coupled skill is fine; a real home path never is.
+- **Nothing moves to the repo until the scan output is accounted for.** Git history is permanent — a secret fixed in a later commit is still leaked.
 
-```bash
-grep -rniE "your-username|your-name|/Users/|api[_-]?key|token|secret|calendar.?id" <staging-copy-path>
-```
+## Public commit identity
 
-Add any vault names, project names, or personal identifiers you use to the pattern.
+| Field | Value |
+| --- | --- |
+| Public commit email | _unset — ask the user once, then record it here_ |
 
-- **Every hit gets resolved or justified out loud.** The sweep finds candidates, not verdicts — "obsidian" in a genuinely Obsidian-coupled skill is fine; a `/Users/your-username/` path never is.
-- **Nothing moves to the repo until the sweep output is accounted for.** Git history is permanent — a secret fixed in a later commit is still leaked.
+- **Compare against this before every commit offer** (SKILL.md, Stage 8). If the field is unset, ask the user which email they publish under and record the answer here.
 
 ## Versioning and changelog
 
 - **Each published skill's README ends with a `Changelog` section** using dated `### YYYY-MM-DD` entries. Add an entry on first publish and on every update that reaches the repo.
-- **No semver, no git tags for now.** Single-author repo with low update traffic — dated entries carry the history. Revisit if the repo gains contributors or dependents.
-- **Commit messages name the skill:** `Add skill: <name>` or `Update <name>: <what changed>`.
+- **Default: no semver, no git tags.** Dated entries carry the history. Change this if your repo uses version numbers or tags.
+- **Default commit message format:** `Add skill: <name>` or `Update <name>: <what changed>`. Change it to match your repo's style.

@@ -8,7 +8,7 @@ Apply every item to the staging copy. No confirmation needed. Report changes aft
 
 ## 2. Strip vault metadata from frontmatter
 
-- **Keep only Claude Code-native fields:** `name`, `description`, `argument-hint`, `effort`, `compatibility`. Strip vault fields: `title`, `aliases`, `uid`, `created`, `modified`, `tags`, `domain`, `note-type`, `categories`, `cssclasses`, `project`, and any wikilink-valued field.
+- **Strip vault fields; keep everything else.** Vault fields: `title`, `aliases`, `uid`, `created`, `modified`, `tags`, `domain`, `note-type`, `categories`, `cssclasses`, `project`, and any wikilink-valued field. Every other field is Claude Code configuration (`name`, `description`, `when_to_use`, `argument-hint`, `effort`, `model`, `allowed-tools`, `context`, `hooks`, `paths`, and others) and stays. If a field is neither on the vault list nor one you recognize, ask before stripping it.
 - **Never strip `effort` or `argument-hint` as "personal config."** They are standard fields that control execution and autocomplete. Stripping them breaks the skill for adopters.
 - **Exception: strip null hints like `argument-hint: (no arguments)`.** A hint with no content is autocomplete noise. Hints listing real modes (`ask|add|list`) stay.
 - **Never add fields the original lacks.** Preserve what exists — a missing `effort` or `argument-hint` stays missing. Adding one is authoring, not sanitizing.
@@ -21,7 +21,7 @@ Apply every item to the staging copy. No confirmation needed. Report changes aft
 
 - **Bundled script invocations use `${CLAUDE_SKILL_DIR}/scripts/<name>`.** Never an absolute path — and never a bare relative path like `scripts/foo.py` either: relative paths resolve against Claude's current working directory, which is almost never the skill folder, so the invocation breaks in every real session. The variable works from anywhere.
 - **Markdown links stay relative.** `[references/x.md](references/x.md)` resolves natively — do not rewrite links to use the variable. It exists for bash injections only.
-- **Output locations default to the current working directory.** Replace every hardcoded output path with "save to the current working directory unless the user specifies a location."
+- **Output locations follow `references/output-path-conventions.md`.** Classify what the skill writes (ephemeral, infrastructure, persistent notes, project artifacts) and apply that row of the decision matrix. For ephemeral output and project artifacts, the default is "save to the current working directory unless the user specifies a location." Use the placeholder format from that file for anything the user must supply.
 - **Shell scripts derive co-located paths:** `SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"`, then `"$SCRIPT_DIR/<file>"`.
 - **Hook scripts derive paths from the hook's JSON payload when it carries them** (e.g., `transcript_path`). Only fall back to a `# Configure:` constant when the payload lacks the data.
 - **User-specific constants in Python get `# Configure:` comments** stating what to change and why.

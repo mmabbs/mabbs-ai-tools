@@ -1,14 +1,14 @@
 # Judgment Pass
 
-These are keep/remove calls where past sanitization runs needed the user's correction. Present all findings in one message — for each: the finding, a recommendation, and the reasoning. Apply only after the user decides. Non-interactive runs apply the recommendation and mark it `AUTO-APPLIED`.
+These are keep/remove calls that turn on what the skill is for and who it's for. Present all findings in one message — for each: the finding, a recommendation, and the reasoning. Apply only after the user decides. Non-interactive runs apply the recommendation and mark it `AUTO-APPLIED`.
 
 ## 1. Core identity vs. author-interest layer
 
-- **Test each domain-specific element: does removing it change what the skill IS, or just who it's tuned for?** Regional or topical identity (a Toronto events skill, a Canadian AI news skill) is the skill's identity — keep it and add an "Adapting" section to the README. A personal interest layered on top (a game-dev category inside a general events skill) narrows the audience — recommend removing it.
+- **Test each domain-specific element: does removing it change what the skill IS, or just who it's tuned for?** Regional or topical identity (a city events skill, a national news digest) is the skill's identity — keep it and add an "Adapting" section to the README. A personal interest layered on top (a game-dev category inside a general events skill) narrows the audience — recommend removing it.
 
 ## 2. Personal-constraint rules
 
-- **Remove rules that encode the author's private situation.** "Exclude Mississauga events" existed because the author couldn't easily get there — invisible context an adopter can't reason about. If the rule's reason lives outside the skill, recommend removal.
+- **Remove rules that encode the author's private situation.** A rule like "exclude events in one particular suburb" might exist only because the author can't easily get there — invisible context an adopter can't reason about. If the rule's reason lives outside the skill, recommend removal.
 
 ## 3. Coupling: document or abstract
 
@@ -36,3 +36,13 @@ These are keep/remove calls where past sanitization runs needed the user's corre
 ## 8. Working documents
 
 - **Fold working docs (positioning notes, planning files) into the README, then delete them.** They were scaffolding, not product.
+
+## 9. Leaks a scan can't see
+
+Read the staging copy for each of these. None has a keyword a pattern could match. Report each hit as a finding with a recommendation.
+
+- **Unreleased or internal plans.** Roadmap detail, an unshipped feature, a dated internal decision. Public copy describes what the skill does now.
+- **People named in prose.** A colleague, a client, a recruiter, or an opinion about a named person. Names in examples and test fixtures count too — nobody reads a fixture the way they read a paragraph, so real names survive there.
+- **Setup described in words.** "Runs on the home server, which syncs to the backup drive in the office" leaks the same map a hostname would.
+- **Commented-out real values.** A disabled credential line, an old path left in a comment, or a "TODO: remove before publish" that never got removed.
+- **Oversharing comments.** A comment that explains *why* using a private incident, a client's constraint, or an internal name.
