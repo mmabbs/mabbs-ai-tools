@@ -1,5 +1,5 @@
 # mabbs-ai-tools
-A small collection of skills I use in my own Claude workflow, cleaned up so anyone can install them. Each is a self-contained folder you copy into a skills directory (one, `research-auditor-desktop`, uploads to claude.ai/Desktop as a ZIP instead). No marketplace, plugin, or build step.
+A small collection of skills I use in my own Claude workflow, cleaned up so anyone can install them. Each is a self-contained folder you copy into a skills directory (one, `audit-research-desktop`, uploads to claude.ai/Desktop as a ZIP instead). No marketplace, plugin, or build step.
 
 New to Claude skills? Check out [Anthropic's docs on Claude Skills](https://code.claude.com/docs/en/skills)
 
@@ -15,7 +15,7 @@ New to Claude skills? Check out [Anthropic's docs on Claude Skills](https://code
 
 | Skill                                                        | What it does                                                                                                                                                                                  | Notes                                        |
 | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| [research-auditor-desktop](skills/research-auditor-desktop/) | Audits citation integrity in research documents: verifies each cited source is real and reachable, checks whether sources say what the document claims, and grades on two axes (link integrity, claim accuracy). | claude.ai/Desktop upload · needs web access |
+| [audit-research-desktop](skills/audit-research-desktop/) | Audits citation integrity in research documents: verifies each cited source is real and reachable, checks whether sources say what the document claims, and grades on two axes (link integrity, claim accuracy). | claude.ai/Desktop upload · needs web access |
 
 ### Skill development
 
@@ -27,8 +27,8 @@ New to Claude skills? Check out [Anthropic's docs on Claude Skills](https://code
 
 | Skill                                    | What it does                                                                                                                                                          | Notes                          |
 | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
-| [cc-health](skills/cc-health/)           | Plugin that audits Claude Code infrastructure across 7 domains (chats, config, assets, memory, version compat, debris, temp files) with Python scanners and a SessionStart hook. Companion to the built-in `/doctor`. | Plugin install |
-| [config-audit](skills/config-audit/)     | Audits every Claude Code config layer (rules, skills, hooks, plugins, MCP, memory, CLAUDE.md, agents) across all your projects and recommends what to relocate, consolidate, or create. Picks up where `/doctor` stops. | Spawns subagents · Opus recommended |
+| [check-cc-health](skills/check-cc-health/)           | Plugin that audits Claude Code infrastructure across 7 domains (chats, config, assets, memory, version compat, debris, temp files) with Python scanners and a SessionStart hook. Companion to the built-in `/doctor`. | Plugin install |
+| [audit-config](skills/audit-config/)     | Audits every Claude Code config layer (rules, skills, hooks, plugins, MCP, memory, CLAUDE.md, agents) across all your projects and recommends what to relocate, consolidate, or create. Picks up where `/doctor` stops. | Spawns subagents · Opus recommended |
 
 ### Local scene & monitoring
 
@@ -65,9 +65,9 @@ Some skills assume a particular environment. Each skill's own `README.md` docume
 - **Obsidian-coupled** — `events` and `ai-news` write notes into an Obsidian vault. The per-skill READMEs list what to change for your own vault, or how to run them standalone.
 - **Region-configurable** — `ai-news` and `events` default to Canadian and Toronto sources. Both document how to point them elsewhere.
 - **Bundled scripts** — `events` includes a cron wrapper shell script that expects `claude` on your PATH.
-- **Plugin install** — `cc-health` is a plugin, not a standalone skill. It requires the local plugin install flow (`claude plugin marketplace add` + `claude plugin install`). See its README for the full steps.
-- **Subagent-heavy** — `config-audit` spawns eight parallel scanner agents plus one reasoning agent per run. It targets Sonnet for scanning and Opus for the cross-layer reasoning; without those models it falls back to your session model.
-- **Desktop upload** — `research-auditor-desktop` is for claude.ai / Claude Desktop, not Claude Code: don't copy it into `~/.claude/skills/`. Rename the folder to `research-auditor` and upload it as a ZIP via Settings → Capabilities → Skills — its README has the exact packaging steps.
+- **Plugin install** — `check-cc-health` is a plugin, not a standalone skill. It requires the local plugin install flow (`claude plugin marketplace add` + `claude plugin install`). See its README for the full steps.
+- **Subagent-heavy** — `audit-config` spawns eight parallel scanner agents plus one reasoning agent per run. It targets Sonnet for scanning and Opus for the cross-layer reasoning; without those models it falls back to your session model.
+- **Desktop upload** — `audit-research-desktop` is for claude.ai / Claude Desktop, not Claude Code: don't copy it into `~/.claude/skills/`. Rename the folder to `audit-research` and upload it as a ZIP via Settings → Capabilities → Skills — its README has the exact packaging steps.
 - **Model requirements** — `ideate` requires Opus. Its frameworks are reasoning-intensive; lower-tier models produce shallow output that defeats the purpose. Solo modes technically function on Sonnet but with degraded quality; combinations and agent pipelines require Opus. Fable is also recommended; it ideates differently from Opus.
 
 ## Maintenance and contributions
