@@ -1,5 +1,5 @@
 # mabbs-ai-tools
-A small collection of skills and plugins I use in my own Claude workflows, cleaned up so anyone can install them. Each is a self-contained folder you copy into a skills directory (one, `audit-research-desktop`, uploads to claude.ai/Desktop as a ZIP instead). No marketplace, plugin, or build step.
+A small collection of skills and plugins I use in my own Claude workflows, cleaned up so anyone can install them. Each is a self-contained folder you copy into a skills directory (one, `audit-research-desktop`, uploads to claude.ai/Desktop as a ZIP instead). No marketplace or build step.
 
 New to Claude skills? Check out [Anthropic's docs on Claude Skills](https://code.claude.com/docs/en/skills)
 
