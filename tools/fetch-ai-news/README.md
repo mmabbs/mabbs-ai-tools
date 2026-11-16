@@ -1,4 +1,4 @@
-## fetch-ai-news
+# fetch-ai-news
 
 A Claude Code skill that researches Canadian AI industry developments and writes a curated daily digest. Covers funding, jobs, company growth, policy, research, and infrastructure — focused on Ontario and Quebec with a Canada-wide lens.
 
@@ -117,6 +117,7 @@ The output includes Obsidian frontmatter and `> [!quote]` callout syntax. If you
 
 ### 2026-11-16
 
+- Renamed from `ai-news`. The command is now `/fetch-ai-news`.
 - Removed two author-specific frontmatter keys (`note-type`, `domain`) from the digest template.
 - README: says the skill runs Monday to Friday, lists Jina Reader as a dependency, and corrects the Obsidian row and the frontmatter advice.
 - `argument-hint` now matches the `--output` flag.

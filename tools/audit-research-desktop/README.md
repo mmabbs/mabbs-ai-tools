@@ -112,6 +112,7 @@ The skill triggers when you ask Claude to audit, verify, or fact-check citations
 
 ### 2026-11-16
 
+- Renamed from `research-auditor-desktop` (skill name `research-auditor`). The skill name is now `audit-research`.
 - Added a contents line to `references/TEMPLATES.md`.
 - The sample output's misattributed claim now follows the skill's own rules.
 - README: added an example you can type and how to turn web access on.

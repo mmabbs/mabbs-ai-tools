@@ -183,6 +183,7 @@ The output includes Obsidian frontmatter and `> [!warning]` callout syntax for s
 
 ### 2026-11-16
 
+- Renamed from `events`. The command is now `/find-events`.
 - The cron script passes its output folder to the skill (`--output`), so headless runs no longer stall on a missing path.
 - The cron script uses the `sonnet` alias instead of a versioned model ID.
 - Added a contents line to `event-schema.md`.

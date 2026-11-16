@@ -1,4 +1,4 @@
-## Ideate
+# Ideate
 
 > **Requires Opus.** This skill is reasoning-intensive — frameworks need to hold a problem's full structure, commit to a cognitive disposition, and produce output that survives adversarial scrutiny. Lower-tier models produce shallow results that defeat the purpose. Solo modes technically function on Sonnet but expect degraded quality; combinations and agent pipelines require Opus.
 >
@@ -82,10 +82,10 @@ No external tools, APIs, or plugins needed.
 ```bash
 # Clone and copy
 git clone --depth 1 https://github.com/mmabbs/mabbs-ai-tools.git
-cp -r mabbs-ai-tools/skills/ideate ~/.claude/skills/
+cp -r mabbs-ai-tools/tools/ideate ~/.claude/skills/
 
 # Or for project-scoped installation
-cp -r mabbs-ai-tools/skills/ideate .claude/skills/
+cp -r mabbs-ai-tools/tools/ideate .claude/skills/
 ```
 
 Claude Code detects new skills without a restart.

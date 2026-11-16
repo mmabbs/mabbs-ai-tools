@@ -76,7 +76,7 @@ staging/daily-brief/
 ```bash
 git clone https://github.com/mmabbs/mabbs-ai-tools.git
 mkdir -p ~/.claude/skills
-cp -r mabbs-ai-tools/skills/sanitize-release ~/.claude/skills/sanitize-release
+cp -r mabbs-ai-tools/tools/sanitize-release ~/.claude/skills/sanitize-release
 ```
 
 ## Usage

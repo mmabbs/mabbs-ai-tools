@@ -1,38 +1,38 @@
 # mabbs-ai-tools
-A small collection of skills and plugins I use in my own Claude workflows, cleaned up so anyone can install them. Each is a self-contained folder you copy into a skills directory (one, `audit-research-desktop`, uploads to claude.ai/Desktop as a ZIP instead). No marketplace or build step.
+A small collection of skills and plugins I use in my own Claude workflows, cleaned up so anyone can install them. Each tool is a self-contained folder. Most are skills you copy into a skills directory; `check-cc-health` installs as a plugin, and `audit-research-desktop` uploads to claude.ai/Desktop as a ZIP. No build step.
 
 New to Claude skills? Check out [Anthropic's docs on Claude Skills](https://code.claude.com/docs/en/skills)
 
-## Skills
+## Tools
 
 ### Thinking
 
-| Skill                    | What it does                                                                                                                                | Notes         |
+| Tool                     | What it does                                                                                                                                | Notes         |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
 | [ideate](tools/ideate/) | 16 structured thinking modes (collision, inversion, first-principles, steelmanning, and more) for working a stuck problem from a new angle. | Requires Opus |
 
 ### Research
 
-| Skill                                                        | What it does                                                                                                                                                                                  | Notes                                        |
+| Tool                                                         | What it does                                                                                                                                                                                  | Notes                                        |
 | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
 | [audit-research-desktop](tools/audit-research-desktop/) | Audits citation integrity in research documents: verifies each cited source is real and reachable, checks whether sources say what the document claims, and grades on two axes (link integrity, claim accuracy). | claude.ai/Desktop upload · needs web access |
 
 ### Skill development
 
-| Skill                                | What it does                                                                                                                                              | Notes                        |
+| Tool                                 | What it does                                                                                                                                              | Notes                        |
 | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
 | [sanitize-release](tools/sanitize-release/) | Turns a personal skill into a public copy: scans for secrets, private names, and portability problems, strips personal data, writes the README, runs an independent review, and gates the repo move. | manual-only · Opus · Python 3 |
 
 ### Claude Code setup
 
-| Skill                                    | What it does                                                                                                                                                          | Notes                          |
+| Tool                                     | What it does                                                                                                                                                          | Notes                          |
 | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
 | [check-cc-health](tools/check-cc-health/)           | Plugin that audits Claude Code infrastructure across 7 domains (chats, config, assets, memory, version compat, debris, temp files) with Python scanners and a SessionStart hook. Companion to the built-in `/doctor`. | Plugin install |
 | [audit-config](tools/audit-config/)     | Audits every Claude Code config layer (rules, skills, hooks, plugins, MCP, memory, CLAUDE.md, agents) across all your projects and recommends what to relocate, consolidate, or create. Picks up where `/doctor` stops. | Spawns subagents · Opus recommended |
 
 ### Local scene & monitoring
 
-| Skill                      | What it does                                                                                       | Notes                                            |
+| Tool                       | What it does                                                                                       | Notes                                            |
 | -------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
 | [fetch-ai-news](tools/fetch-ai-news/) | Generates a Canadian AI-industry news digest covering funding, jobs, regulation, and market moves. | Region-configurable · writes files               |
 | [find-events](tools/find-events/) | Scrapes local tech and AI events from several sources into one date-stamped, categorized note.     | Region-configurable · manual-only · writes files |
@@ -41,7 +41,7 @@ New to Claude skills? Check out [Anthropic's docs on Claude Skills](https://code
 
 ## Install
 
-Each skill is one folder. Clone the repo and copy the folder you want into your skills directory:
+Each tool is one folder. For a skill, clone the repo and copy the folder you want into your skills directory (`check-cc-health` is a plugin and installs differently; see below):
 
 ```bash
 git clone --depth 1 https://github.com/<user>/<repo>.git
@@ -60,11 +60,11 @@ Replace `<user>/<repo>` with this repository's path.
 
 ## Before you run them
 
-Some skills assume a particular environment. Each skill's own `README.md` documents its requirements, configuration, and how it behaves without them — the short version:
+Some tools assume a particular environment. Each tool's own `README.md` documents its requirements, configuration, and how it behaves without them — the short version:
 
-- **Obsidian-coupled** — `find-events` and `fetch-ai-news` write notes into an Obsidian vault. The per-skill READMEs list what to change for your own vault, or how to run them standalone.
+- **Obsidian-coupled** — `find-events` and `fetch-ai-news` write notes into an Obsidian vault. The per-tool READMEs list what to change for your own vault, or how to run them standalone.
 - **Region-configurable** — `fetch-ai-news` and `find-events` default to Canadian and Toronto sources. Both document how to point them elsewhere.
-- **Bundled scripts** — `events` includes a cron wrapper shell script that expects `claude` on your PATH.
+- **Bundled scripts** — `find-events` includes a cron wrapper shell script that expects `claude` on your PATH.
 - **Plugin install** — `check-cc-health` is a plugin, not a standalone skill. It requires the local plugin install flow (`claude plugin marketplace add` + `claude plugin install`). See its README for the full steps.
 - **Subagent-heavy** — `audit-config` spawns eight parallel scanner agents plus one reasoning agent per run. It targets Sonnet for scanning and Opus for the cross-layer reasoning; without those models it falls back to your session model.
 - **Desktop upload** — `audit-research-desktop` is for claude.ai / Claude Desktop, not Claude Code: don't copy it into `~/.claude/skills/`. Rename the folder to `audit-research` and upload it as a ZIP via Settings → Capabilities → Skills — its README has the exact packaging steps.

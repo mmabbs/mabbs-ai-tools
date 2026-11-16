@@ -73,11 +73,12 @@ Where the two overlapped, check-cc-health dropped its check: malformed `.mcp.jso
 
 ## Installation
 
-1. Copy this folder into your local plugins directory:
+1. Clone the repo and copy this folder into your local plugins directory:
 
    ```bash
+   git clone --depth 1 https://github.com/mmabbs/mabbs-ai-tools.git
    mkdir -p ~/.claude/plugins/local
-   cp -r check-cc-health ~/.claude/plugins/local/check-cc-health
+   cp -r mabbs-ai-tools/tools/check-cc-health ~/.claude/plugins/local/check-cc-health
    ```
 
 2. Create the local marketplace file at `~/.claude/plugins/local/.claude-plugin/marketplace.json`. Claude Code needs it to discover plugins in that folder:
@@ -154,6 +155,7 @@ Checks that were scoped but never built. Listed here so nobody assumes the scann
 
 ### 2026-11-16
 
+- Renamed from `cc-health`. The plugin, skill, and command are now `check-cc-health`. If you installed the old plugin, uninstall it and install `check-cc-health@local`.
 - Fixed the version check. The changelog classifier is now a flat agent file (`agents/changelog-classifier.md`) called as `check-cc-health:changelog-classifier`; the old name did not resolve.
 - The classifier runs on Sonnet. Its `effort: high` setting is gone.
 - Install steps corrected: create the local marketplace file, then register `~/.claude/plugins/local` (not the plugin folder) and install `check-cc-health@local`.

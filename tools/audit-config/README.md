@@ -110,6 +110,7 @@ Findings quality depends on how much config you actually have — a fresh setup 
 
 ### 2026-11-16
 
+- Renamed from `config-audit`. The command is now `/audit-config`.
 - The reasoning agent is no longer pinned to max effort.
 - Archived originals go to a folder you choose (`<archive-folder>`) instead of a fixed path.
 - The docs now agree with the skill: findings open in a temporary file with a one-line summary in chat, and `save <dir>` keeps a copy.

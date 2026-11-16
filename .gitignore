@@ -7,3 +7,6 @@ __pycache__/
 *.pyc
 *.pyo
 
+
+# Test caches
+.pytest_cache/
