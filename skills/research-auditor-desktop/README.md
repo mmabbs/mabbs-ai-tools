@@ -108,6 +108,10 @@ The skill triggers when you ask Claude to audit, verify, or fact-check citations
 
 ## Changelog
 
+### 2026-11-16
+
+- Added a contents line to `references/TEMPLATES.md`.
+
 ### 2026-07-19
 
 - First public release: four-phase audit, two-axis tagging and grading, manual-audit workflow for unlocatable sources, optional Exa second channel.

@@ -1,5 +1,7 @@
 # Citation Audit Output Templates
 
+**Contents of this file:** Executive Summary · Systemic Warning · Critical Findings · Manual Audit — NOT FOUND items · Quick Summary · Full Audit Log · Sample Output (abbreviated)
+
 Use these structures exactly. Counts, tiers, and claim IDs everywhere — never percentages.
 
 ## Executive Summary
