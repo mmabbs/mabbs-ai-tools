@@ -1,6 +1,6 @@
 ---
-name: ai-news
-description: Use when generating Canadian AI industry news digests, researching AI news for Ontario/Quebec/Canada, or running /ai-news. Covers funding, jobs, growth, regulation, market moves. Triggers on Canadian AI news, Canadian tech industry update, AI digest request.
+name: fetch-ai-news
+description: Use when generating Canadian AI industry news digests, researching AI news for Ontario/Quebec/Canada, or running /fetch-ai-news. Covers funding, jobs, growth, regulation, market moves. Triggers on Canadian AI news, Canadian tech industry update, AI digest request.
 argument-hint: "[--output <output-folder>]"
 ---
 
@@ -8,7 +8,7 @@ argument-hint: "[--output <output-folder>]"
 
 Research AI industry developments in Canada since the last issue and write a curated digest note. Output is a markdown file with frontmatter, compatible with Obsidian vaults (see README for non-Obsidian use). Focused on **Ontario and Quebec** with a broader **Canada-wide** lens. Covers business, labor, policy, and technology — not product reviews or AI hype commentary.
 
-**Arguments:** `/ai-news [--output <path>]`
+**Arguments:** `/fetch-ai-news [--output <path>]`
 
 - `--output <path>` — Directory where digest notes are written (required on first run; ask the user if not provided)
 

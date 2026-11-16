@@ -1,14 +1,14 @@
 ---
-name: events
+name: find-events
 disable-model-invocation: true
-description: Scrape Toronto tech and AI events from multiple sources into a categorized markdown note with source-health tracking. Manual-only — invoke with /events.
+description: Scrape Toronto tech and AI events from multiple sources into a categorized markdown note with source-health tracking. Manual-only — invoke with /find-events.
 ---
 
 ## Events Scraper
 
 Scrape upcoming Toronto events across tech and AI communities. Produces a date-stamped, category-sectioned markdown note.
 
-**Arguments:** `/events [--output <path>] [--filter keyword] [--days N]`
+**Arguments:** `/find-events [--output <path>] [--filter keyword] [--days N]`
 
 - `--output <path>` — Directory where event notes and health state are written (required on first run; ask the user if not provided)
 - `--filter keyword` — Only include events whose title or description matches the keyword (case-insensitive)

@@ -1,4 +1,4 @@
-## ai-news
+## fetch-ai-news
 
 A Claude Code skill that researches Canadian AI industry developments and writes a curated daily digest. Covers funding, jobs, company growth, policy, research, and infrastructure — focused on Ontario and Quebec with a Canada-wide lens.
 
@@ -64,7 +64,7 @@ The output is a markdown file with frontmatter, geographic tags per item, and st
 ```bash
 # Clone and copy
 git clone --depth 1 https://github.com/<user>/<repo>.git
-cp -r <repo>/skills/ai-news ~/.claude/skills/
+cp -r <repo>/tools/fetch-ai-news ~/.claude/skills/
 
 # Create your output directory — wherever you want digests to live
 mkdir -p <output-folder>  # e.g., notes/ai-news, digests/, Research/AI/, etc.
@@ -74,13 +74,13 @@ mkdir -p <output-folder>  # e.g., notes/ai-news, digests/, Research/AI/, etc.
 # { "permissions": { "allow": ["WebFetch", "WebSearch"] } }
 ```
 
-The skill triggers on phrases like "Canadian AI news," "AI digest," "Canadian tech industry update," or by invoking `/ai-news` directly.
+The skill triggers on phrases like "Canadian AI news," "AI digest," "Canadian tech industry update," or by invoking `/fetch-ai-news` directly.
 
 ### Usage
 
 ```
-/ai-news --output <output-folder>    # run the digest, writing to your chosen folder
-/ai-news                             # prompts for output path if not provided
+/fetch-ai-news --output <output-folder>    # run the digest, writing to your chosen folder
+/fetch-ai-news                             # prompts for output path if not provided
 ```
 
 The `--output` flag tells the skill where to write digest notes. If omitted, the skill asks you for a path. There is no default — you decide where digests belong in your project.

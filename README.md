@@ -9,33 +9,33 @@ New to Claude skills? Check out [Anthropic's docs on Claude Skills](https://code
 
 | Skill                    | What it does                                                                                                                                | Notes         |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| [ideate](skills/ideate/) | 16 structured thinking modes (collision, inversion, first-principles, steelmanning, and more) for working a stuck problem from a new angle. | Requires Opus |
+| [ideate](tools/ideate/) | 16 structured thinking modes (collision, inversion, first-principles, steelmanning, and more) for working a stuck problem from a new angle. | Requires Opus |
 
 ### Research
 
 | Skill                                                        | What it does                                                                                                                                                                                  | Notes                                        |
 | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| [audit-research-desktop](skills/audit-research-desktop/) | Audits citation integrity in research documents: verifies each cited source is real and reachable, checks whether sources say what the document claims, and grades on two axes (link integrity, claim accuracy). | claude.ai/Desktop upload · needs web access |
+| [audit-research-desktop](tools/audit-research-desktop/) | Audits citation integrity in research documents: verifies each cited source is real and reachable, checks whether sources say what the document claims, and grades on two axes (link integrity, claim accuracy). | claude.ai/Desktop upload · needs web access |
 
 ### Skill development
 
 | Skill                                | What it does                                                                                                                                              | Notes                        |
 | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
-| [sanitize-release](skills/sanitize-release/) | Turns a personal skill into a public copy: scans for secrets, private names, and portability problems, strips personal data, writes the README, runs an independent review, and gates the repo move. | manual-only · Opus · Python 3 |
+| [sanitize-release](tools/sanitize-release/) | Turns a personal skill into a public copy: scans for secrets, private names, and portability problems, strips personal data, writes the README, runs an independent review, and gates the repo move. | manual-only · Opus · Python 3 |
 
 ### Claude Code setup
 
 | Skill                                    | What it does                                                                                                                                                          | Notes                          |
 | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
-| [check-cc-health](skills/check-cc-health/)           | Plugin that audits Claude Code infrastructure across 7 domains (chats, config, assets, memory, version compat, debris, temp files) with Python scanners and a SessionStart hook. Companion to the built-in `/doctor`. | Plugin install |
-| [audit-config](skills/audit-config/)     | Audits every Claude Code config layer (rules, skills, hooks, plugins, MCP, memory, CLAUDE.md, agents) across all your projects and recommends what to relocate, consolidate, or create. Picks up where `/doctor` stops. | Spawns subagents · Opus recommended |
+| [check-cc-health](tools/check-cc-health/)           | Plugin that audits Claude Code infrastructure across 7 domains (chats, config, assets, memory, version compat, debris, temp files) with Python scanners and a SessionStart hook. Companion to the built-in `/doctor`. | Plugin install |
+| [audit-config](tools/audit-config/)     | Audits every Claude Code config layer (rules, skills, hooks, plugins, MCP, memory, CLAUDE.md, agents) across all your projects and recommends what to relocate, consolidate, or create. Picks up where `/doctor` stops. | Spawns subagents · Opus recommended |
 
 ### Local scene & monitoring
 
 | Skill                      | What it does                                                                                       | Notes                                            |
 | -------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| [ai-news](skills/ai-news/) | Generates a Canadian AI-industry news digest covering funding, jobs, regulation, and market moves. | Region-configurable · writes files               |
-| [events](skills/events/)   | Scrapes local tech and AI events from several sources into one date-stamped, categorized note.     | Region-configurable · manual-only · writes files |
+| [fetch-ai-news](tools/fetch-ai-news/) | Generates a Canadian AI-industry news digest covering funding, jobs, regulation, and market moves. | Region-configurable · writes files               |
+| [find-events](tools/find-events/) | Scrapes local tech and AI events from several sources into one date-stamped, categorized note.     | Region-configurable · manual-only · writes files |
 
 **Notes legend:** _manual-only_ — runs only when you invoke it, won't auto-trigger; _region-configurable_ — ships with Canadian defaults you can repoint.
 
@@ -45,7 +45,7 @@ Each skill is one folder. Clone the repo and copy the folder you want into your 
 
 ```bash
 git clone --depth 1 https://github.com/<user>/<repo>.git
-cp -r <repo>/skills/ideate ~/.claude/skills/
+cp -r <repo>/tools/ideate ~/.claude/skills/
 ```
 
 - `~/.claude/skills/` installs a skill for every project. A project's own `.claude/skills/` scopes it to that repo.
@@ -53,7 +53,7 @@ cp -r <repo>/skills/ideate ~/.claude/skills/
 - Want one skill without cloning the whole repo? Use GitHub's "download folder" option, or [`degit`](https://github.com/Rich-Harris/degit) (requires Node 20+):
 
   ```bash
-  degit <user>/<repo>/skills/ideate ~/.claude/skills/ideate
+  degit <user>/<repo>/tools/ideate ~/.claude/skills/ideate
   ```
 
 Replace `<user>/<repo>` with this repository's path.
@@ -62,8 +62,8 @@ Replace `<user>/<repo>` with this repository's path.
 
 Some skills assume a particular environment. Each skill's own `README.md` documents its requirements, configuration, and how it behaves without them — the short version:
 
-- **Obsidian-coupled** — `events` and `ai-news` write notes into an Obsidian vault. The per-skill READMEs list what to change for your own vault, or how to run them standalone.
-- **Region-configurable** — `ai-news` and `events` default to Canadian and Toronto sources. Both document how to point them elsewhere.
+- **Obsidian-coupled** — `find-events` and `fetch-ai-news` write notes into an Obsidian vault. The per-skill READMEs list what to change for your own vault, or how to run them standalone.
+- **Region-configurable** — `fetch-ai-news` and `find-events` default to Canadian and Toronto sources. Both document how to point them elsewhere.
 - **Bundled scripts** — `events` includes a cron wrapper shell script that expects `claude` on your PATH.
 - **Plugin install** — `check-cc-health` is a plugin, not a standalone skill. It requires the local plugin install flow (`claude plugin marketplace add` + `claude plugin install`). See its README for the full steps.
 - **Subagent-heavy** — `audit-config` spawns eight parallel scanner agents plus one reasoning agent per run. It targets Sonnet for scanning and Opus for the cross-layer reasoning; without those models it falls back to your session model.

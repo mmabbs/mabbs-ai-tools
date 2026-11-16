@@ -43,7 +43,7 @@ unset CLAUDECODE
 #   claude mcp list | grep playwright
 # and update the names below. Without matching IDs, Playwright is unavailable
 # and scrapers fall back to WebFetch/Jina.
-"$CLAUDE_BIN" -p "/events --output \"$OUTPUT_DIR\"" \
+"$CLAUDE_BIN" -p "/find-events --output \"$OUTPUT_DIR\"" \
     --model "$MODEL" \
     --allowedTools "Read,Write,Edit,WebFetch,Agent,Bash,Grep,Glob,ToolSearch,mcp__plugin_playwright_playwright__browser_navigate,mcp__plugin_playwright_playwright__browser_snapshot,mcp__plugin_playwright_playwright__browser_wait_for,mcp__plugin_playwright_playwright__browser_close" \
     --max-turns 35 \

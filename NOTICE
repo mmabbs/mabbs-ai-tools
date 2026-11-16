@@ -10,7 +10,7 @@ not own.
 Third-party material
 --------------------
 
-The `ideate` skill (skills/ideate/) includes eight ideation "modes" — collide,
+The `ideate` skill (tools/ideate/) includes eight ideation "modes" — collide,
 state, lens, assume, pattern, bound, scaffold, and simplify — that are a remix
 and substantial reworking of skills originally published by GitHub user
 agentgptsmith in `MonadFramework/.claude/skills`
@@ -29,6 +29,6 @@ described above. If you are the original author and object to this attribution
 or to republication of the derived material, contact the copyright holder and
 it will be removed.
 
-See skills/ideate/README.md ("Acknowledgments & Provenance") for the full
+See tools/ideate/README.md ("Acknowledgments & Provenance") for the full
 account of what derives from the original versus what is original to this
 project.

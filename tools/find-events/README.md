@@ -1,4 +1,4 @@
-# events
+# find-events
 
 A Claude Code skill that scrapes upcoming tech and AI events in Toronto from six sources, deduplicates them against previous runs, and writes a categorized Obsidian note.
 
@@ -93,9 +93,9 @@ categories: [tech, ai]
 ## Usage
 
 ```
-/events --output <output-folder>  # scrape all Toronto tech/AI events, next 30 days
-/events --days 7                  # next 7 days only
-/events --filter AI               # only events matching "AI"
+/find-events --output <output-folder>  # scrape all Toronto tech/AI events, next 30 days
+/find-events --days 7                  # next 7 days only
+/find-events --filter AI               # only events matching "AI"
 ```
 
 The `--output` flag tells the skill where to write event notes and the `source-health.json` file. If omitted, the skill asks you for a path. There is no default — you decide where event notes belong in your project.
@@ -127,7 +127,7 @@ Each invocation spawns 6 parallel Sonnet agents (one per source). This runs comf
 ```bash
 # Clone and copy
 git clone --depth 1 https://github.com/<user>/<repo>.git
-cp -r <repo>/skills/events ~/.claude/skills/
+cp -r <repo>/tools/find-events ~/.claude/skills/
 
 # Optional: reduce permission prompts
 # Add to .claude/settings.local.json:

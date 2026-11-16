@@ -65,7 +65,7 @@ audit-config covers what they don't:
 
 ```bash
 git clone --depth 1 https://github.com/mmabbs/mabbs-ai-tools.git
-cp -R mabbs-ai-tools/skills/audit-config ~/.claude/skills/audit-config
+cp -R mabbs-ai-tools/tools/audit-config ~/.claude/skills/audit-config
 ```
 
 Restart Claude Code (or start a new session) and run `/audit-config`.
