@@ -110,3 +110,9 @@ The content domain structure (Funding, Jobs, Policy, etc.) and the formatting ru
 ### Notes for Non-Obsidian Users
 
 The output includes Obsidian frontmatter and `> [!quote]` callout syntax. If you're not using Obsidian, strip the frontmatter block from the output template in SKILL.md. The `[!quote]` callout renders as a plain blockquote with visible `[!quote]` text in standard markdown renderers.
+
+## Changelog
+
+### 2026-11-16
+
+- Removed two author-specific frontmatter keys (`note-type`, `domain`) from the digest template.

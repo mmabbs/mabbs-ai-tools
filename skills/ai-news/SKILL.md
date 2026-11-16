@@ -216,8 +216,6 @@ Cap at 2 Playwright fetches per run. If the first Playwright attempt itself fail
 ```yaml
 ---
 title: "Canadian AI News - {YYYY-MM-DD}"
-note-type: research
-domain: [artificial-intelligence]
 tags: [ai-industry, daily-digest, canada]
 source: ["https://example.com/article-1", "https://example.com/article-2"]
 ---
