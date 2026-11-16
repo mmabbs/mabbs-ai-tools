@@ -10,8 +10,7 @@ VAULT="$HOME/path/to/your/vault"
 OUTPUT_DIR="$VAULT/path/to/your/events-folder"  # where event notes and source-health.json are written
 CITY="toronto"                                   # used in filenames: <city>-events-YYYY-MM-DD.md
 CLAUDE_BIN="$HOME/.local/bin/claude"             # adjust to your claude binary path
-MODEL="claude-sonnet-4-6"                        # update when models are renamed/retired
-                                                  # check available models: claude model list
+MODEL="sonnet"                                   # alias for the latest Sonnet; a full model name also works
 # --------------------------
 
 # Log directory — override with EVENTS_LOG_DIR; default works on Linux and macOS.
@@ -44,7 +43,7 @@ unset CLAUDECODE
 #   claude mcp list | grep playwright
 # and update the names below. Without matching IDs, Playwright is unavailable
 # and scrapers fall back to WebFetch/Jina.
-"$CLAUDE_BIN" -p "/events" \
+"$CLAUDE_BIN" -p "/events --output \"$OUTPUT_DIR\"" \
     --model "$MODEL" \
     --allowedTools "Read,Write,Edit,WebFetch,Agent,Bash,Grep,Glob,ToolSearch,mcp__plugin_playwright_playwright__browser_navigate,mcp__plugin_playwright_playwright__browser_snapshot,mcp__plugin_playwright_playwright__browser_wait_for,mcp__plugin_playwright_playwright__browser_close" \
     --max-turns 35 \

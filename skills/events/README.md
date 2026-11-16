@@ -179,3 +179,11 @@ To remove a source, delete its scraper file and remove its row from the dispatch
 ## Notes for Non-Obsidian Users
 
 The output includes Obsidian frontmatter and `> [!warning]` callout syntax for staleness alerts. If you're not using Obsidian, the frontmatter is harmless metadata, and the callouts render as plain blockquotes with visible `[!warning]` text. If you prefer no frontmatter, edit the output template in `event-schema.md`.
+
+## Changelog
+
+### 2026-11-16
+
+- The cron script passes its output folder to the skill (`--output`), so headless runs no longer stall on a missing path.
+- The cron script uses the `sonnet` alias instead of a versioned model ID.
+- Added a contents line to `event-schema.md`.

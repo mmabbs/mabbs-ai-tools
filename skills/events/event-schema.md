@@ -1,5 +1,7 @@
 ## Event Schema & Note Template
 
+**Contents of this file:** Common Event Schema (Field Rules, Category Assignment, Tag List) · Output Note Template (Formatting Rules, Deduplication)
+
 ### Common Event Schema (JSON)
 
 Each scraper agent returns events in this format:
