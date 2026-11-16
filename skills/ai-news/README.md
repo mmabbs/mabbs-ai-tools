@@ -8,11 +8,12 @@ The skill handles the full pipeline: deduplication against previous issues, mult
 
 When triggered, the skill:
 
-1. Checks if today's digest already exists (no duplicates)
-2. Loads the last 5 issues to build an exclusion list (no repeated stories)
-3. Runs 4–5 targeted web searches across a tiered source list
-4. Fetches and verifies articles from Canadian tech/AI outlets
-5. Writes a formatted digest organized by content domain
+1. Checks the day: it runs Monday to Friday and stops on weekends
+2. Checks if today's digest already exists (no duplicates)
+3. Loads the last 5 issues to build an exclusion list (no repeated stories)
+4. Runs 4–5 targeted web searches across a tiered source list
+5. Fetches and verifies articles from Canadian tech/AI outlets
+6. Writes a formatted digest organized by content domain
 
 The output is a markdown file with frontmatter, geographic tags per item, and stories grouped into six sections: Funding/Investment/M&A, Jobs/Talent, Company Growth/Market Moves, Policy/Regulation, Research/Innovation, and Infrastructure/Compute.
 
@@ -53,9 +54,10 @@ The output is a markdown file with frontmatter, geographic tags per item, and st
 
 | Dependency       | What it adds                                                       | Without it                                                          |
 | ---------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------- |
-| Obsidian vault   | Frontmatter metadata, vault-relative paths, deduplication via glob | Outputs a plain markdown file; adapt the path and strip frontmatter |
+| Obsidian vault   | Frontmatter shows as note properties and `[!quote]` callouts render | Nothing breaks. The output is plain markdown with YAML frontmatter |
 | Agent delegation | Offloads research to a `web-researcher` subagent for cleaner context | Falls back to inline execution automatically (built-in)             |
 | Playwright MCP   | Last-resort fetch for sites that block standard requests           | Skipped automatically; WebFetch + Jina handle most sources          |
+| [Jina Reader](https://r.jina.ai/) | Fetches pages that a direct WebFetch can't read; The Logic always goes through it | Falls back to search snippets for those sources |
 
 ### Installation
 
@@ -109,10 +111,12 @@ The content domain structure (Funding, Jobs, Policy, etc.) and the formatting ru
 
 ### Notes for Non-Obsidian Users
 
-The output includes Obsidian frontmatter and `> [!quote]` callout syntax. If you're not using Obsidian, strip the frontmatter block from the output template in SKILL.md. The `[!quote]` callout renders as a plain blockquote with visible `[!quote]` text in standard markdown renderers.
+The output includes Obsidian frontmatter and `> [!quote]` callout syntax. If you're not using Obsidian, leave the frontmatter in. It's harmless in plain markdown, and the skill reads its `source:` line to avoid repeating stories. The `[!quote]` callout renders as a plain blockquote with visible `[!quote]` text in standard markdown renderers.
 
 ## Changelog
 
 ### 2026-11-16
 
 - Removed two author-specific frontmatter keys (`note-type`, `domain`) from the digest template.
+- README: says the skill runs Monday to Friday, lists Jina Reader as a dependency, and corrects the Obsidian row and the frontmatter advice.
+- `argument-hint` now matches the `--output` flag.

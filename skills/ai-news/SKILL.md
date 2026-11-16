@@ -1,7 +1,7 @@
 ---
 name: ai-news
 description: Use when generating Canadian AI industry news digests, researching AI news for Ontario/Quebec/Canada, or running /ai-news. Covers funding, jobs, growth, regulation, market moves. Triggers on Canadian AI news, Canadian tech industry update, AI digest request.
-argument-hint: <output-folder>
+argument-hint: "[--output <output-folder>]"
 ---
 
 ## Canadian AI Industry News (Mon–Fri)
@@ -102,7 +102,7 @@ Prioritize results from these sources. The fetch strategy for each is based on t
 | Source | Fetch Strategy | Notes |
 |--------|---------------|-------|
 | BetaKit (betakit.com) | Direct WebFetch | No paywall, clean full-text |
-| The Logic (thelogic.co) | **Jina only** — `https://r.jina.ai/https://thelogic.co/...` | Direct fetch returns 403; Jina bypasses |
+| The Logic (thelogic.co) | **Jina only** — `https://r.jina.ai/https://thelogic.co/...` | Direct fetch returns 403; fetch through Jina Reader |
 | CBC News Business (cbc.ca/news/business) | Direct WebFetch | Named journalists, no paywall |
 | ISED Canada (ised-isde.canada.ca) | Direct WebFetch | Government policy docs and strategy |
 | Canada.ca ISED press releases (canada.ca/en/innovation-science-economic-development) | Direct WebFetch | Government AI program announcements, funding awards |
