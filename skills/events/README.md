@@ -8,12 +8,11 @@ The skill runs the full pipeline autonomously: parallel scraping across platform
 
 When triggered, the skill:
 
-1. Checks if today's digest already exists (no duplicates)
-2. Builds an exclusion list from all previous reports (no repeated events across days)
-3. Launches 6 parallel scraper agents — one per source platform
-4. Aggregates results: normalizes schemas, deduplicates within-run and cross-day, filters by keyword/date range
-5. Writes a categorized note grouped by Tech Events and AI Events
-6. Tracks source health — flags sources that return zero events for 3+ consecutive days
+1. Builds an exclusion list from all previous reports (no repeated events across days)
+2. Launches 6 parallel scraper agents — one per source platform
+3. Aggregates results: normalizes schemas, deduplicates within-run and cross-day, filters by keyword/date range
+4. Writes a categorized note grouped by Tech Events and AI Events
+5. Tracks source health — flags sources that return zero events for 3+ consecutive days
 
 ## Sources
 
@@ -114,10 +113,10 @@ Each invocation spawns 6 parallel Sonnet agents (one per source). This runs comf
 
 | Dependency                        | What it adds                                                                             | Without it                                                       |
 | --------------------------------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| Obsidian vault                    | Frontmatter metadata, vault-relative paths, daily note alerts, source health persistence | Outputs a plain markdown file; adapt paths and strip frontmatter |
+| Obsidian vault                    | Frontmatter shows as note properties and `[!warning]` callouts render                    | Nothing breaks. The output is plain markdown with YAML frontmatter, and `source-health.json` is written to the output folder either way |
 | Playwright MCP                    | Last-resort fetch for SPAs that block standard requests (Luma, AI Tinkerers)             | Skipped automatically; Jina Reader handles most cases            |
 | [Jina Reader](https://r.jina.ai/) | Fetch fallback for sites that block direct requests (free, no API key required)          | Falls through to Playwright or returns 0 events for that source  |
-| Obsidian CLI                      | Daily note staleness warnings when a source goes stale                                   | Warnings appear in the summary output instead                    |
+| Obsidian CLI                      | Daily note staleness warnings when a source goes stale                                   | Warnings appear in the run summary, or in the cron log for headless runs |
 
 > **Playwright install note:** Use the Claude Code plugin system (`claude plugin install playwright`). Non-plugin MCP installations use different tool IDs — the scrapers discover tools via ToolSearch at runtime, but the `--allowedTools` flag in `events-scraper.sh` uses plugin-format tool names and may need updating for non-plugin setups.
 >
@@ -137,7 +136,7 @@ cp -r <repo>/skills/events ~/.claude/skills/
 
 ### Headless / Cron Setup
 
-The skill includes `events-scraper.sh` — a cron wrapper that runs the skill in headless mode. Configure the two variables at the top (`VAULT` and `CLAUDE_BIN`), then add to your crontab:
+The skill includes `events-scraper.sh` — a cron wrapper that runs the skill in headless mode. Set `VAULT` and `OUTPUT_DIR` at the top (the script exits if either folder is missing), check `CLAUDE_BIN`, and change `CITY` or `MODEL` if you need to. Then add to your crontab:
 
 ```bash
 # Daily at 8 AM, weekdays only
@@ -187,3 +186,6 @@ The output includes Obsidian frontmatter and `> [!warning]` callout syntax for s
 - The cron script passes its output folder to the skill (`--output`), so headless runs no longer stall on a missing path.
 - The cron script uses the `sonnet` alias instead of a versioned model ID.
 - Added a contents line to `event-schema.md`.
+- README no longer says the skill checks for today's note first; only the cron script does. It now lists all five script settings.
+- In headless runs without the Obsidian CLI, warnings print to the log. The daily-note warning no longer assumes a `## Notes` heading.
+- The description no longer promises a separate source-status mode.

@@ -1,7 +1,7 @@
 ---
 name: events
 disable-model-invocation: true
-description: Scrape Toronto tech and AI events from multiple sources into a categorized markdown note with source-health tracking. Manual-only — invoke with /events (also handles scraper-health and source-status checks).
+description: Scrape Toronto tech and AI events from multiple sources into a categorized markdown note with source-health tracking. Manual-only — invoke with /events.
 ---
 
 ## Events Scraper
@@ -13,7 +13,7 @@ Scrape upcoming Toronto events across tech and AI communities. Produces a date-s
 - `--output <path>` — Directory where event notes and health state are written (required on first run; ask the user if not provided)
 - `--filter keyword` — Only include events whose title or description matches the keyword (case-insensitive)
 - `--days N` — Only include events within the next N days (default: 30)
-- No arguments — scrape all events for the next 30 days (prompts for output path if not previously set)
+- No arguments — scrape all events for the next 30 days (asks for the output path)
 
 **City:** This skill ships configured for **Toronto**. To adapt to another city, see the README's "Adapting to Other Cities" section. The city name appears in filename patterns below as `<city>` — the shipped value is `toronto`.
 
@@ -130,7 +130,7 @@ Include the Source Health table in the note. Flag any source with `zero_streak >
 
 ### Step 5: Daily Note Alert
 
-If any source has `zero_streak >= 3`, append a staleness warning to today's daily note under `## Notes`:
+If any source has `zero_streak >= 3`, append a staleness warning to today's daily note:
 
 ```
 > [!warning] Events scraper: {source} returned 0 events for {N} consecutive days. Scraper may need attention.
@@ -138,7 +138,7 @@ If any source has `zero_streak >= 3`, append a staleness warning to today's dail
 
 Use the CLI command: `obsidian daily:append "{warning text}"`
 
-If the Obsidian CLI isn't available (no vault, or running standalone), surface the warning in the Step 6 summary instead.
+If the Obsidian CLI isn't available (no vault, or running standalone), surface the warning in the Step 6 summary instead. In a headless run, print it so it lands in the log.
 
 ---
 
@@ -157,8 +157,8 @@ When run interactively (not via cron), report:
 ### Error Handling
 
 - Agent timeout/failure: log the error, continue with other sources.
-- ALL sources fail: do not write an empty note. In interactive mode, inform the user. In headless mode, append a warning to the daily note.
-- **Zero events after processing**: If all sources succeed but 0 events remain after dedup, filtering, and date-range checks — do not write an empty note. Append to today's daily note under `## Notes`:
+- ALL sources fail: do not write an empty note. In interactive mode, inform the user. In headless mode, append a warning to the daily note, or print it to the log if the Obsidian CLI isn't available.
+- **Zero events after processing**: If all sources succeed but 0 events remain after dedup, filtering, and date-range checks — do not write an empty note. Append to today's daily note (or print it if the Obsidian CLI isn't available):
 
   ```
   > [!warning] Events scraper ran but found 0 upcoming events after filtering. Sources were healthy — no new events in the next {N} days.

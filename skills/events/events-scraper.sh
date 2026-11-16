@@ -3,7 +3,7 @@
 # Schedule: daily at 8AM (or your preferred time)
 #   crontab: 0 8 * * 1-5 /path/to/events-scraper.sh
 #
-# Configure the two variables below before first run.
+# Set VAULT and OUTPUT_DIR before first run. Check CLAUDE_BIN; change CITY and MODEL if needed.
 
 # --- USER CONFIGURATION ---
 VAULT="$HOME/path/to/your/vault"
