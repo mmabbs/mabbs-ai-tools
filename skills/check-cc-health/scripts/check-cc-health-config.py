@@ -23,6 +23,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 from lib.schema import AuditReport, Finding, progress
+from lib.pathcodec import resolve_encoded_path
 
 # Env vars known to be removed in recent CC versions.
 # Manually maintained — no automated sync from the version domain.
@@ -36,66 +37,6 @@ def parse_args():
     parser.add_argument("--base-dir", default=str(Path.home()),
                         help="Base directory (defaults to $HOME, override for testing)")
     return parser.parse_args()
-
-
-# Characters that Claude Code's project-path encoding collapses into "-".
-# See references/path-encoding.md; extend this if it documents more collapsed characters.
-LOSSY_CHARS = ("/", ".", "-", "_", " ")
-
-
-def _resolve_dfs(tokens: list[str], idx: int, current: Path) -> "Path | None":
-    """DFS: find a real path under `current` that consumes tokens[idx:].
-
-    At each step, tries consuming tokens[idx..j] as a single filesystem entry
-    name (joined with each non-slash lossy character). Filesystem existence
-    prunes the search tree — the fan-out is bounded by what actually exists.
-    """
-    if idx == len(tokens):
-        return current if current.exists() else None
-
-    for j in range(idx, len(tokens)):
-        if j == idx:
-            # Single token: the name is exactly the token
-            name = tokens[j]
-            if not name:
-                continue
-            cand = current / name
-            if cand.exists():
-                result = _resolve_dfs(tokens, j + 1, cand)
-                if result is not None:
-                    return result
-        else:
-            # Multiple tokens: try joining idx..j with each non-slash lossy char
-            segment = tokens[idx : j + 1]
-            for ch in LOSSY_CHARS:
-                if ch == "/":
-                    continue
-                name = ch.join(segment)
-                if not name:
-                    continue
-                cand = current / name
-                if cand.exists():
-                    result = _resolve_dfs(tokens, j + 1, cand)
-                    if result is not None:
-                        return result
-
-    return None
-
-
-def resolve_encoded_path(encoded: str, root: Path = Path("/")) -> "Path | None":
-    """Resolve a lossy hyphen-encoded project path against the real filesystem.
-
-    Returns an existing Path that encodes to `encoded`, or None if no such
-    path exists (the genuine orphan case). Candidates are bounded by real
-    directory existence, so the search cannot explode.
-
-    Uses DFS to handle multi-hyphen directory names (e.g. `pytest-of-jdoe`)
-    that the naive single-token algorithm cannot resolve.
-    """
-    if not encoded.startswith("-"):
-        return None
-    tokens = encoded[1:].split("-")
-    return _resolve_dfs(tokens, 0, root)
 
 
 def check_orphaned_projects(claude_json_path: Path, findings: list[Finding], root: Path = Path("/")):
@@ -259,13 +200,8 @@ def check_empty_mcp_json(base_dir: Path, findings: list[Finding]):
                     action="Remove if not needed"
                 ))
         except (json.JSONDecodeError, OSError):
-            findings.append(Finding(
-                severity="warning",
-                check="malformed-mcp-json",
-                message=".mcp.json contains invalid JSON",
-                path=str(mcp_file),
-                action="Fix or remove the file"
-            ))
+            # Parse errors are /doctor's job (check 0); skip here to avoid a duplicate report
+            continue
 
 
 def check_stale_env_vars(claude_dir: Path, findings: list[Finding]):

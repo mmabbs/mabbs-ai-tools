@@ -58,6 +58,35 @@ def test_broken_agent_reference(tmp_path):
     assert "broken-agent-reference" in checks
 
 
+def test_plugin_agent_reference_resolves(tmp_path):
+    """A flat plugin agent is found under both its bare and <plugin>:<name> forms."""
+    plugin_root = tmp_path / ".claude" / "plugins" / "local" / "my-plugin"
+    (plugin_root / ".claude-plugin").mkdir(parents=True)
+    (plugin_root / ".claude-plugin" / "plugin.json").write_text('{"name": "my-plugin"}')
+    (plugin_root / "agents").mkdir()
+    (plugin_root / "agents" / "helper.md").write_text(textwrap.dedent("""\
+        ---
+        name: helper
+        description: A helper agent
+        ---
+        You help.
+    """))
+    skill_dir = plugin_root / "skills" / "my-skill"
+    skill_dir.mkdir(parents=True)
+    (skill_dir / "SKILL.md").write_text(textwrap.dedent("""\
+        ---
+        name: my-skill
+        description: Uses the helper
+        ---
+        Agent({ subagent_type: "my-plugin:helper" })
+        Agent({ subagent_type: "helper" })
+    """))
+
+    report = run_scanner(str(tmp_path))
+    checks = [f["check"] for f in report["findings"]]
+    assert "broken-agent-reference" not in checks
+
+
 def test_dead_at_import(tmp_path):
     """@-imports pointing at non-existent files are flagged."""
     claude_dir = tmp_path / ".claude"
@@ -138,6 +167,46 @@ def test_bare_model_alias_not_flagged(tmp_path):
     report = run_scanner(str(tmp_path))
     checks = [f["check"] for f in report["findings"]]
     assert "invalid-model-id" not in checks
+    assert "pinned-model-id" not in checks
+
+
+def test_pinned_model_id(tmp_path):
+    """Flat-file agent definitions pinning a full model ID get an info finding."""
+    claude_dir = tmp_path / ".claude"
+    agents_dir = claude_dir / "agents"
+    agents_dir.mkdir(parents=True)
+
+    (agents_dir / "my-agent.md").write_text(textwrap.dedent("""\
+        ---
+        name: my-agent
+        model: claude-example-1-0
+        effort: high
+        ---
+        You are a helpful agent.
+    """))
+
+    report = run_scanner(str(tmp_path))
+    pinned = [f for f in report["findings"] if f["check"] == "pinned-model-id"]
+    assert len(pinned) == 1
+    assert pinned[0]["severity"] == "info"
+
+
+def test_pinned_model_id_subdirectory_layout(tmp_path):
+    """The name/AGENT.md layout is checked too."""
+    claude_dir = tmp_path / ".claude"
+    agents_dir = claude_dir / "agents" / "my-agent"
+    agents_dir.mkdir(parents=True)
+
+    (agents_dir / "AGENT.md").write_text(textwrap.dedent("""\
+        ---
+        model: claude-sample-2-0
+        ---
+        You are a helpful agent.
+    """))
+
+    report = run_scanner(str(tmp_path))
+    checks = [f["check"] for f in report["findings"]]
+    assert "pinned-model-id" in checks
 
 
 def test_clean_assets_no_findings(tmp_path):
@@ -145,7 +214,7 @@ def test_clean_assets_no_findings(tmp_path):
     claude_dir = tmp_path / ".claude"
     skills_dir = claude_dir / "skills" / "good-skill"
     skills_dir.mkdir(parents=True)
-    agents_dir = claude_dir / "agents" / "good-agent"
+    agents_dir = claude_dir / "agents"
     agents_dir.mkdir(parents=True)
 
     (skills_dir / "SKILL.md").write_text(textwrap.dedent("""\
@@ -156,8 +225,9 @@ def test_clean_assets_no_findings(tmp_path):
         Do the thing directly.
     """))
 
-    (agents_dir / "AGENT.md").write_text(textwrap.dedent("""\
+    (agents_dir / "good-agent.md").write_text(textwrap.dedent("""\
         ---
+        name: good-agent
         model: opus
         effort: high
         ---

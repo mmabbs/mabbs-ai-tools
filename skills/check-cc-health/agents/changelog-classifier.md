@@ -17,7 +17,7 @@ For each bullet entry, assign exactly one category:
 | `schema-change` | Config file format, JSON structure, or API contract changed | New required field, renamed key, changed type of a value |
 | `new-feature` | Adds capability that didn't exist before | New command, new flag, new config option, new tool |
 | `bugfix` | Fixes incorrect behavior without changing the intended contract | "Fixed X not working when Y", crash fixes, edge case corrections |
-| `irrelevant` | Documentation, internal refactoring, CI changes, or changes to features the user definitely doesn't interact with | Docs updates, test infrastructure, internal telemetry |
+| `irrelevant` | Documentation, internal refactoring, CI changes, telemetry: changes with no surface a user's config, scripts, or workflow could depend on | Docs updates, test infrastructure, internal telemetry |
 
 ## Classification Rules
 

@@ -11,6 +11,7 @@ module and point its PROJECTS_DIR at a temp directory.
 """
 
 import importlib.util
+import re
 import sys
 from pathlib import Path
 
@@ -50,7 +51,7 @@ def chats(tmp_path, monkeypatch):
     # (b) encoded dir whose decoded path exists
     real_project = tmp_path / "real-project"
     real_project.mkdir()
-    existing_encoded = str(real_project).replace("/", "-")
+    existing_encoded = re.sub(r"[^a-zA-Z0-9]", "-", str(real_project))  # encode as Claude Code does
     (projects_dir / existing_encoded).mkdir()
     (projects_dir / existing_encoded / "b.jsonl").write_text("")
 

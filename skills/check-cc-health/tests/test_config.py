@@ -1,6 +1,7 @@
 """Tests for check-cc-health-config scanner."""
 
 import json
+import re
 import subprocess
 import sys
 import tempfile
@@ -49,7 +50,7 @@ def test_hyphenated_directory_not_flagged(tmp_path):
     real_dir.mkdir()
 
     # Encode it as CC would: /tmp_path/my-vault -> -<tmp_path>-my-vault
-    encoded = str(tmp_path / "my-vault").replace("/", "-")
+    encoded = re.sub(r"[^a-zA-Z0-9]", "-", str(tmp_path / "my-vault"))
 
     claude_json = tmp_path / ".claude.json"
     claude_json.write_text(json.dumps({

@@ -4,15 +4,6 @@ description: "Audit Claude Code infrastructure health — config, skills/agents/
 argument-hint: chats|config|assets|memory|version|debris|temp|full
 ---
 
-## When to Use
-
-Trigger when:
-
-- User asks to audit or maintain Claude Code configuration
-- User invokes `/check-cc-health` with a domain or `full`
-- SessionStart hook nudges about a version change (user follows up with `/check-cc-health version`)
-- Periodic maintenance
-
 ## Domains
 
 | Domain | Scanner | What it checks |
@@ -48,6 +39,8 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/check-cc-health-<domain>.py [flags]
 
 The script outputs JSON to stdout. Parse it as the finding report.
 
+`--deep` is not a scanner flag. This skill handles it in Step 4, and the assets scanner exits with an argument error if it receives it. Pass every other flag through.
+
 **Scanner failures:** If a scanner exits non-zero, prints a traceback, or emits anything that isn't parseable JSON, do NOT treat it as "no findings." Report the domain as failed (quote the last few lines of stderr), retry at most once, and in `full` mode continue with the remaining domains. If failures persist, suggest checking `python3 --version` — the scanners require Python 3.10+.
 
 For `chats` domain, pass the subcommand as a positional argument:
@@ -63,7 +56,7 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/check-cc-health-chats.py global
 
 For `full` mode, run each domain sequentially and aggregate findings. For the chats domain in `full` mode, run `scan`, `usage`, and `orphans` — never `clean`.
 
-**Chats output translation:** The chats scanner outputs its own legacy JSON format (a list of conversation objects), NOT the AuditReport schema used by other domains. When aggregating for `full` mode, do NOT treat chats output as Finding objects. Instead, summarize it as: conversation count, short-lived session count, orphan count, custom-named project dirs (`custom_named_dirs`, if any), and total disk usage. Present this summary in a "Chats" section of the report alongside the other domains' finding tables.
+**Chats output translation:** The chats scanner does NOT use the AuditReport schema the other domains use. Each subcommand prints its own JSON object: a `mode` key, a list (`conversations`, `projects`, or `orphans`), and a `summary` object. When aggregating for `full` mode, do NOT treat chats output as Finding objects. Instead, summarize it as: conversation count (`scan` → `summary.total`), short-lived session count (`scan` → `summary.short_lived`), orphan count (`orphans` → `summary.total_orphaned_projects`), custom-named project dirs (`orphans` → `custom_named_dirs`, if any), and total disk usage (`usage` → `summary.total_size_human`). Present this summary in a "Chats" section of the report alongside the other domains' finding tables.
 
 **Assets notes — trigger clash detection:** The assets scanner always checks for overlapping skill trigger descriptions using TF-IDF similarity. Pairs above the threshold (default 0.35, tunable via `--clash-threshold`) are flagged as `trigger-clash` warnings.
 
@@ -119,7 +112,7 @@ The `version` domain does NOT have a standalone scanner script. Orchestrate it i
 
 Skip this step entirely unless `assets` was invoked with `--deep`:
 
-1. Run the regular scanner first (checks 1–4, 6).
+1. Run the regular scanner first, without `--deep` (it runs checks 1–4, 6 and 7; check 5 is this step).
 2. For each skill found, spawn an inline agent to check description drift:
    ```
    Agent({

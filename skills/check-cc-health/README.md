@@ -15,6 +15,21 @@ The `version` domain works differently — it slices the CC changelog between yo
 
 A SessionStart hook nudges you when Claude Code updates, so you know to run `/check-cc-health version` before a breaking change surprises you. On installs where Claude Code's executable path doesn't include the version number, the hook can't see updates and stays silent; run `/check-cc-health version` yourself after updating.
 
+## How it fits with `/doctor`
+
+Claude Code's built-in `/doctor` (and `/skill-doctor`) cover different ground. Run both:
+
+| Built-in `/doctor` covers                                          | check-cc-health covers                                                        |
+|--------------------------------------------------------------------|-------------------------------------------------------------------------|
+| Your install, PATH, and update channel                             | Changelog entries since your last run that touch your config           |
+| Settings and `.mcp.json` files that fail to parse                  | Project entries and MCP servers tied to folders that no longer exist   |
+| Agent and skill frontmatter that won't load                        | Broken skill/agent references and dead `@`-imports across every project |
+| Unused skills, plugins, and MCP servers (with `/skill-doctor` stats) | Skills whose trigger descriptions compete with each other              |
+| CLAUDE.md trimming and dedup in the current project                | Stale and dated auto-memory entries                                    |
+| Slow hooks, permission defaults                                    | Old conversations, orphaned project folders, leftover scratch files    |
+
+Where the two overlapped, check-cc-health dropped its check: malformed `.mcp.json` files are left to `/doctor`.
+
 ## Sample output
 
 ```
@@ -115,13 +130,13 @@ With no filter, `clean` targets short-lived sessions: no assistant reply, fewer 
 | `skills/check-cc-health/references/`          | Reference docs for path encoding and config load semantics|
 | `agents/changelog-classifier.md`        | Agent definition for version-domain changelog analysis    |
 | `scripts/check-cc-health-*.py`               | Domain scanner scripts (one per domain)                   |
-| `scripts/lib/`                          | Shared Python modules (schema, frontmatter, TF-IDF)      |
+| `scripts/lib/`                          | Shared Python modules (schema, frontmatter, TF-IDF, path decoding) |
 | `scripts/version-detect.sh`            | SessionStart hook script — detects CC version changes     |
 | `hooks/hooks.json`                      | Hook registration for the SessionStart nudge              |
 | `tests/`                                | pytest test suite for all scanners                        |
+| `.claude-plugin/plugin.json`            | Plugin manifest                                           |
 
 Persistent state (last-seen version, trigger-clash baseline) is written to `~/.claude/check-cc-health-state.json` at runtime — outside the plugin directory, so reinstalling or upgrading the plugin never wipes it.
-| `.claude-plugin/plugin.json`            | Plugin manifest                                           |
 
 ## Not implemented (ideas)
 
@@ -148,6 +163,23 @@ Checks that were scoped but never built. Listed here so nobody assumes the scann
 - The effort check and the orphan check read both agent layouts (`agents/<name>.md` and `agents/<name>/AGENT.md`). An unreferenced agent that has a description is reported as info, not a warning.
 - Fixed the `chats clean` example and the Domains table in the skill. The usage block now shows the dry run before `--confirm`.
 - Listed the changelog cache as a requirement. The `cache` folder is marked "with caution" in the disk breakdown. The SessionStart hook falls back to `python3` on your PATH.
+
+### 2026-10-05 — v2.1.0
+
+- Repositioned alongside Claude Code's built-in `/doctor`; see "How it fits with `/doctor`".
+- Config: removed the `malformed-mcp-json` check (`/doctor` parse-checks `.mcp.json`).
+- Assets: `invalid-model-id` (flagged bare aliases) replaced by `pinned-model-id`, an info-level notice that a full model ID won't follow newer releases. Bare aliases (`opus`, `sonnet`, `haiku`) are no longer flagged.
+- Assets: the model/effort check now reads flat `agents/<name>.md` files, the standard layout, as well as `agents/<name>/AGENT.md`. Previously it skipped flat files.
+- Assets: plugin agents are recognized in both layouts and under their `<plugin>:<name>` form, so references like `check-cc-health:changelog-classifier` no longer read as broken.
+- Fixed the bundled classifier agent: it is now `agents/changelog-classifier.md` with `name` and `description` frontmatter. It previously had no `name` or `description`, so it registered under a path-derived name the version domain didn't call.
+- Fixed `/check-cc-health assets --deep` failing: `--deep` is handled by the skill and no longer passed to the scanner, which rejects it.
+- Corrected the skill's description of the chats output (an object with a `summary`, not a list) and named the field behind each reported count.
+- `references/path-encoding.md` now matches the code: `.` and `_` also collapse to `-`.
+- Changelog classifier: `irrelevant` now means "nothing a user's config, scripts, or workflow could depend on", so it no longer guesses what the user uses.
+- Moved the "When to Use" triggers into the skill description, where they affect routing.
+- Chats and config now share one path decoder (`scripts/lib/pathcodec.py`). It matches encoded project names against real folder names, so names with any punctuation (`my_app`, `site.v2`, `{Project}`) resolve. Previously `chats orphans` could report those projects as deleted.
+- `references/path-encoding.md` rewritten: Claude Code turns every non-letter, non-digit character into `-`, not just a handful.
+- `references/load-semantics.md` checked against Claude Code 2.1.289 and stamped; the `/compact` note corrected (nested CLAUDE.md files reload on demand).
 
 ### 2026-07-19 — v2.0.1
 

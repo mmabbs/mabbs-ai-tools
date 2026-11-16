@@ -8,7 +8,7 @@ Checks:
 3. Dead @-imports — CLAUDE.md @-import chains pointing at missing files
 4. Deprecated duplicates — archived skills still in active directory
 5. (--deep only, handled by SKILL.md) Description drift
-6. Effort validity — invalid effort values in agent definitions
+6. Model/effort validity — pinned full model IDs or invalid effort values in agent definitions
 7. Trigger clashes -- overlapping skill trigger descriptions
 
 Usage:
@@ -28,6 +28,9 @@ sys.path.insert(0, str(Path(__file__).parent))
 from lib.schema import AuditReport, Finding, progress, load_state, save_state
 from lib.frontmatter import parse_skill_frontmatter
 from lib.tfidf import tokenize, build_tfidf, cosine_similarity, top_shared_terms
+
+# Full (pinned) model IDs (pattern: claude-<name>-<version> with optional suffix)
+MODEL_ID_PATTERN = re.compile(r"^claude-[a-z]+-\d+(-\d+)?(-\d{8})?(\[\d+[a-z]?\])?$")
 
 # Valid effort levels
 VALID_EFFORTS = {"low", "medium", "high", "xhigh", "max"}
@@ -93,16 +96,29 @@ def find_all_agent_names(base_dir: Path) -> set[str]:
             if f.is_file() and f.suffix == ".md" and "archive" not in f.parts:
                 names.add(f.stem)
 
-    # Plugin agents
+    # Plugin agents: register both the bare name and the <plugin>:<name> form
     plugins_dir = claude_dir / "plugins"
     if plugins_dir.exists():
         for plugin_root in plugins_dir.rglob("agents"):
-            if plugin_root.is_dir():
-                for d in plugin_root.iterdir():
-                    if d.is_dir() and (d / "AGENT.md").exists():
-                        names.add(d.name)
-                    elif d.is_file() and d.suffix == ".md":
-                        names.add(d.stem)
+            if not plugin_root.is_dir():
+                continue
+            plugin_name = None
+            manifest = plugin_root.parent / ".claude-plugin" / "plugin.json"
+            if manifest.exists():
+                try:
+                    plugin_name = json.loads(manifest.read_text()).get("name")
+                except (json.JSONDecodeError, OSError):
+                    pass
+            for entry in plugin_root.iterdir():
+                if entry.is_dir() and (entry / "AGENT.md").exists():
+                    agent = entry.name
+                elif entry.is_file() and entry.suffix == ".md":
+                    agent = entry.stem
+                else:
+                    continue
+                names.add(agent)
+                if plugin_name:
+                    names.add(f"{plugin_name}:{agent}")
 
     return names
 
@@ -227,8 +243,8 @@ def check_deprecated_duplicates(base_dir: Path, findings: list[Finding]):
             ))
 
 
-def check_effort_validity(base_dir: Path, findings: list[Finding]):
-    """Check agent definitions for invalid effort values."""
+def check_model_effort_validity(base_dir: Path, findings: list[Finding]):
+    """Check agent definitions for pinned full model IDs and invalid effort values."""
     claude_dir = base_dir / ".claude"
     agents_dir = claude_dir / "agents"
 
@@ -258,7 +274,17 @@ def check_effort_validity(base_dir: Path, findings: list[Finding]):
 
         for line in frontmatter.split("\n"):
             line = line.strip()
-            if line.startswith("effort:"):
+            if line.startswith("model:"):
+                model_val = line.split(":", 1)[1].strip().strip("'\"")
+                if model_val and MODEL_ID_PATTERN.match(model_val):
+                    findings.append(Finding(
+                        severity="info",
+                        check="pinned-model-id",
+                        message=f"Agent pins full model ID '{model_val}' and won't follow newer releases",
+                        path=str(agent_md),
+                        action="Use a bare alias (opus, sonnet, haiku) to track the latest model, unless the pin is deliberate"
+                    ))
+            elif line.startswith("effort:"):
                 effort_val = line.split(":", 1)[1].strip().strip("'\"")
                 if effort_val and effort_val not in VALID_EFFORTS:
                     findings.append(Finding(
@@ -432,8 +458,8 @@ def main():
     check_dead_at_imports(base_dir, findings)
     checks_run += 1
 
-    progress("Checking effort validity...")
-    check_effort_validity(base_dir, findings)
+    progress("Checking model/effort validity...")
+    check_model_effort_validity(base_dir, findings)
     checks_run += 1
 
     progress("Checking for deprecated duplicates...")

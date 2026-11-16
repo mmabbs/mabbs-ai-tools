@@ -28,6 +28,7 @@ from pathlib import Path as _Path
 import sys as _sys
 _sys.path.insert(0, str(_Path(__file__).parent))
 from lib.schema import progress
+from lib.pathcodec import resolve_encoded_path
 
 CLAUDE_DIR = Path.home() / ".claude"
 PROJECTS_DIR = CLAUDE_DIR / "projects"
@@ -53,71 +54,18 @@ def decode_project_path(encoded: str) -> str:
     return decoded
 
 
-def verify_path_exists(encoded: str) -> tuple[bool, str]:
-    """Check if the decoded path exists, trying common corrections.
+def verify_path_exists(encoded: str, root: Path = Path("/")) -> tuple[bool, str]:
+    """Check whether an encoded project folder name still points at a real path.
 
-    Returns (exists, best_path) where best_path is the decoded path that exists,
-    or the naive decode if none found.
-
-    The encoding scheme converts both '/' and ' ' (space) to '-', making it
-    ambiguous. Strategy: Walk path segments, trying both hyphens and spaces
-    when a segment doesn't exist as-is.
+    Returns (exists, best_path): the resolved path if one exists, else the
+    naive decode. Uses the same decoder as the config scanner (lib/pathcodec),
+    which tries every character the encoding collapses, so the two scanners
+    agree on which projects are orphaned.
     """
-    naive_decode = decode_project_path(encoded)
-
-    # First try the naive decode
-    if os.path.exists(naive_decode):
-        return True, naive_decode
-
-    # Handle dotfiles: -- represents /.
-    working_encoded = encoded[1:] if encoded.startswith("-") else encoded
-    working_encoded = working_encoded.replace("--", "-.")
-
-    parts = working_encoded.split("-")
-
-    # Build up path segment by segment
-    current = "/"
-    i = 0
-    while i < len(parts):
-        part = parts[i]
-        if not part:
-            i += 1
-            continue
-
-        test_path = os.path.join(current, part)
-
-        if os.path.exists(test_path):
-            current = test_path
-            i += 1
-            continue
-
-        # Segment doesn't exist - try combining with remaining segments
-        # using either hyphens or spaces
-        found = False
-        for j in range(i + 1, len(parts) + 1):
-            # Try with hyphens (original folder had hyphens)
-            combined_hyphen = "-".join(parts[i:j])
-            test_hyphen = os.path.join(current, combined_hyphen)
-            if os.path.exists(test_hyphen):
-                current = test_hyphen
-                i = j
-                found = True
-                break
-
-            # Try with spaces (original folder had spaces)
-            combined_space = " ".join(parts[i:j])
-            test_space = os.path.join(current, combined_space)
-            if os.path.exists(test_space):
-                current = test_space
-                i = j
-                found = True
-                break
-
-        if not found:
-            # Couldn't find a match
-            return False, naive_decode
-
-    return os.path.exists(current), current
+    resolved = resolve_encoded_path(encoded, root)
+    if resolved is not None:
+        return True, str(resolved)
+    return False, decode_project_path(encoded)
 
 
 def encode_project_path(path: str) -> str:

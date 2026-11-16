@@ -1,5 +1,7 @@
 # Load Semantics Reference
 
+_Version-specific facts in this doc (limits, counts, defaults) were checked against Claude Code 2.1.289 docs and changelog on 2026-10-05._
+
 Rules that govern how Claude Code discovers and loads configuration. The config scanner uses these to detect mis-scoped config.
 
 ## Inheritance Rules
@@ -9,7 +11,7 @@ Rules that govern how Claude Code discovers and loads configuration. The config 
 | CLAUDE.md | Yes (ancestors at launch) | Nested subdir CLAUDE.md loads on-demand when files in that subtree are read |
 | settings.json | No | Loads ONLY from the launch-root — not ancestors |
 | agents/ | No | Only launch-root `.claude/agents/` plus global `~/.claude/agents/` |
-| .claude/rules/ | Undocumented | Don't assume ancestor rules load in subfolder launches |
+| .claude/rules/ | Undocumented | Not covered by the docs. Don't assume ancestor rules load in subfolder launches |
 | MCP (local scope) | No | Keyed to the exact launch directory path |
 | skills/ | Partial | launch-root + ancestors up to repo root + global + plugins |
 
@@ -19,9 +21,9 @@ Rules that govern how Claude Code discovers and loads configuration. The config 
 
 2. An MCP server local-scoped to `/Users/jdoe/projects/my-project/` will NOT connect when launching from `/Users/jdoe/projects/my-project/packages/api/`.
 
-3. CLAUDE.md files in nested subdirectories are loaded on-demand — they're not guaranteed to be in context after `/compact`.
+3. CLAUDE.md files in nested subdirectories are loaded on demand. `/compact` drops them from context; they reload the next time Claude reads a file in that subdirectory.
 
-4. A permission in `settings.json` at the vault root won't apply when launching from a project subdirectory (settings don't inherit).
+4. A permission in `settings.json` at the project root won't apply when launching from a project subdirectory (settings don't inherit).
 
 ## Conflict Resolution
 
