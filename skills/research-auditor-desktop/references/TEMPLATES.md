@@ -216,7 +216,7 @@ On request, or for documents small enough to log fully:
 
 | ID | Claim | Citation | Issue |
 |---|---|---|---|
-| C4 | "over 80% of respondents are concerned about environmental issues affecting them now" | [1] | Source says 80% concerned about *future* impact; corroborated nowhere for "now" framing — but claim is qualitative, fabrication not checked |
+| C4 | "younger shoppers increasingly prefer refillable packaging" | [1] | Source covers general attitudes toward sustainability; it does not mention refillable packaging or age groups — low-stakes claim, fabrication not checked |
 
 ## Manual Audit Required: 1 source could not be located
 

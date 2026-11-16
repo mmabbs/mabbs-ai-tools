@@ -89,6 +89,8 @@ The skill's retrieval surface uses `web_search` and `web_fetch`:
 | Exa fetch connector (e.g. `web_fetch_exa`) | Optional | Single-channel retrieval: some bot-defended pages can't be rescued, and the missing-page vs. unreachable-domain signal is coarser. Nothing else changes |
 | Input: Markdown or pasted text with `[N]` inline citations and a Works Cited / References section, URL-backed | Required (format) | Book and offline citations are listed as out of scope — never guessed at |
 
+**Turning web access on:** click **+** in the lower left of the chat box and select **Web search**. That switch also covers web fetch. On Team and Enterprise plans, an owner has to enable it first under Organization settings > Capabilities. If your Claude has no Web search switch, it already searches on its own. Details: [Enable and use web search](https://support.claude.com/en/articles/10684626-enabling-and-using-web-search).
+
 ## Installation
 
 1. Download or clone this folder (`research-auditor-desktop`).
@@ -97,7 +99,7 @@ The skill's retrieval surface uses `web_search` and `web_fetch`:
 4. ZIP the renamed folder (the folder goes inside the ZIP — not its files at the ZIP root).
 5. Upload via Settings → Capabilities → Skills. See [Anthropic's skill documentation](https://support.claude.com/en/articles/12512180-use-skills-in-claude) for the full flow.
 
-The skill triggers when you ask Claude to audit, verify, or fact-check citations in a research document you've shared.
+The skill triggers when you ask Claude to audit, verify, or fact-check citations in a research document you've shared. For example, attach `report.md` (or paste its text) and type: "Audit the citations in this report. Are these sources real?"
 
 ## Bundled References
 
@@ -111,6 +113,8 @@ The skill triggers when you ask Claude to audit, verify, or fact-check citations
 ### 2026-11-16
 
 - Added a contents line to `references/TEMPLATES.md`.
+- The sample output's misattributed claim now follows the skill's own rules.
+- README: added an example you can type and how to turn web access on.
 
 ### 2026-07-19
 
