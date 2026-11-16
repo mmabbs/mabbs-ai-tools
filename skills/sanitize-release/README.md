@@ -76,9 +76,9 @@ The skill runs at `effort: high`, so a full run uses more tokens than a default 
 ## Installation
 
 ```bash
-git clone https://github.com/mmabbs/mabbs-claude-tools.git
+git clone https://github.com/mmabbs/mabbs-ai-tools.git
 mkdir -p ~/.claude/skills
-cp -r mabbs-claude-tools/skills/sanitize-release ~/.claude/skills/sanitize-release
+cp -r mabbs-ai-tools/skills/sanitize-release ~/.claude/skills/sanitize-release
 ```
 
 ## Usage
