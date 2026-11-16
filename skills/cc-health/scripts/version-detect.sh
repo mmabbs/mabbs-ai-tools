@@ -27,8 +27,10 @@ if [[ ! -f "$state_file" ]]; then
   exit 0
 fi
 
-# Read last-seen version (python3 is at /usr/bin/python3 — safe in stripped PATH)
-last=$(/usr/bin/python3 -c "import json,sys; print(json.load(open('$state_file')).get('lastSeenVersion',''))" 2>/dev/null)
+# Read last-seen version. Prefer /usr/bin/python3 (safe in a stripped PATH); fall back to python3 on PATH.
+py=/usr/bin/python3
+[[ -x "$py" ]] || py=$(command -v python3)
+last=$("$py" -c "import json,sys; print(json.load(open('$state_file')).get('lastSeenVersion',''))" 2>/dev/null)
 
 if [[ "$current" != "$last" && -n "$last" ]]; then
   echo "CC updated $last → $current — run /cc-health version to check for breaking changes."

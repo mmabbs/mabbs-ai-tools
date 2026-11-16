@@ -2,6 +2,8 @@
 
 A Claude Code plugin that audits your Claude Code infrastructure across 7 domains — conversations, config, assets (skills/agents/plugins), memory, version compatibility, debris, and temp files. Report-first: scanners are read-only, fixes happen only after you confirm.
 
+To decide which layer a piece of config belongs in (rule, skill, hook, memory), use [config-audit](../config-audit/). This plugin checks health, not placement.
+
 ## What it does
 
 1. You invoke `/cc-health <domain>` (or `/cc-health full` to run everything).
@@ -11,7 +13,7 @@ A Claude Code plugin that audits your Claude Code infrastructure across 7 domain
 
 The `version` domain works differently — it slices the CC changelog between your last-seen version and the current one, classifies entries for breaking changes using a dedicated agent, and checks whether any affect your config.
 
-A SessionStart hook nudges you when Claude Code updates, so you know to run `/cc-health version` before a breaking change surprises you.
+A SessionStart hook nudges you when Claude Code updates, so you know to run `/cc-health version` before a breaking change surprises you. On installs where Claude Code's executable path doesn't include the version number, the hook can't see updates and stays silent; run `/cc-health version` yourself after updating.
 
 ## Sample output
 
@@ -52,6 +54,7 @@ A SessionStart hook nudges you when Claude Code updates, so you know to run `/cc
 | Claude Code              | Required  | Plugin won't load                                                 |
 | Python 3.10+             | Required  | Scanners won't run (stdlib only — no pip dependencies)            |
 | Plugin support (v2.1+)   | Required  | Plugin system must be available for hook registration             |
+| `~/.claude/cache/changelog.md` | For `version` | Claude Code keeps this file up to date. Without it, the version check stops with "Changelog cache is unavailable" |
 
 ## Installation
 
@@ -93,13 +96,16 @@ A SessionStart hook nudges you when Claude Code updates, so you know to run `/cc
 /cc-health assets --deep                   # Include description-drift check (spawns agents)
 /cc-health assets --clash-threshold 0.25   # Lower trigger-clash sensitivity
 /cc-health chats scan --empty-only         # Find empty sessions
-/cc-health chats clean --confirm           # Delete matched sessions
+/cc-health chats clean                     # Preview what would be deleted (dry run)
+/cc-health chats clean --confirm           # Permanently delete the previewed sessions
 /cc-health chats usage                     # Disk usage by project
 /cc-health chats orphans                   # Find conversations for deleted projects
 /cc-health chats global                    # Full ~/.claude disk breakdown
 /cc-health version                         # Check for breaking changes since last run
 /cc-health full                            # Run all domains
 ```
+
+With no filter, `clean` targets short-lived sessions: no assistant reply, fewer than 3 user messages, under 60 seconds, or under 2 KB. Deletion is permanent, so run the preview first.
 
 ## Bundled files
 
@@ -137,7 +143,11 @@ Checks that were scoped but never built. Listed here so nobody assumes the scann
 - The classifier runs on Sonnet. Its `effort: high` setting is gone.
 - Install steps corrected: create the local marketplace file, then register `~/.claude/plugins/local` (not the plugin folder) and install `cc-health@local`.
 - The assets scanner no longer warns about bare model aliases such as `opus` or `sonnet`. It recognizes flat agent files in plugins and plugin-scoped agent names.
-- The description says when to use the skill. The archive folder and `skill-routing.md` are described as optional.
+- The description says when to use the skill. The archive folder is described as optional.
+- Removed skill-routing awareness. Trigger clashes are now one warning, `trigger-clash`.
+- The effort check and the orphan check read both agent layouts (`agents/<name>.md` and `agents/<name>/AGENT.md`). An unreferenced agent that has a description is reported as info, not a warning.
+- Fixed the `chats clean` example and the Domains table in the skill. The usage block now shows the dry run before `--confirm`.
+- Listed the changelog cache as a requirement. The `cache` folder is marked "with caution" in the disk breakdown. The SessionStart hook falls back to `python3` on your PATH.
 
 ### 2026-07-19 — v2.0.1
 

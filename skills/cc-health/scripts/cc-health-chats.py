@@ -543,7 +543,7 @@ def audit_disk() -> dict[str, Any]:
         "telemetry": True,
         "usage-data": True,
         "file-history": "with caution",
-        "cache": True,
+        "cache": "with caution",
         "paste-cache": True,
     }
 

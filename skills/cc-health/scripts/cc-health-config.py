@@ -39,9 +39,7 @@ def parse_args():
 
 
 # Characters that Claude Code's project-path encoding collapses into "-".
-# Cross-check against references/path-encoding.md and the decoder in the
-# existing ~/.claude/scripts/cc-health.py before finalizing; extend if either
-# documents additional collapsed characters.
+# See references/path-encoding.md; extend this if it documents more collapsed characters.
 LOSSY_CHARS = ("/", ".", "-", "_", " ")
 
 

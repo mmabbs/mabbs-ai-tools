@@ -151,7 +151,7 @@ def check_broken_agent_refs(base_dir: Path, available_agents: set[str], findings
                     check="broken-agent-reference",
                     message=f"Agent() references non-existent agent type '{agent_name}'",
                     path=str(skill_md),
-                    action=f"Create agent definition at .claude/agents/{agent_name}/AGENT.md or fix the reference"
+                    action=f"Create agent definition at .claude/agents/{agent_name}.md or fix the reference"
                 ))
 
 
@@ -235,13 +235,17 @@ def check_effort_validity(base_dir: Path, findings: list[Finding]):
     if not agents_dir.exists():
         return
 
-    for agent_dir in agents_dir.iterdir():
-        if "archive" in agent_dir.parts:
+    # Agents are either a flat file (name.md) or a folder (name/AGENT.md)
+    agent_files = []
+    for item in agents_dir.iterdir():
+        if "archive" in item.parts:
             continue
-        agent_md = agent_dir / "AGENT.md"
-        if not agent_md.exists():
-            continue
+        if item.is_dir() and (item / "AGENT.md").exists():
+            agent_files.append(item / "AGENT.md")
+        elif item.is_file() and item.suffix == ".md":
+            agent_files.append(item)
 
+    for agent_md in agent_files:
         content = agent_md.read_text()
         # Parse frontmatter (between --- markers)
         if not content.startswith("---"):
@@ -264,50 +268,6 @@ def check_effort_validity(base_dir: Path, findings: list[Finding]):
                         path=str(agent_md),
                         action=f"Use one of: {', '.join(sorted(VALID_EFFORTS))}"
                     ))
-
-
-_ROUTING_TABLE_RE = re.compile(
-    r"^\|\s*(?P<context>[^|]+)\s*\|\s*(?P<route_to>[^|]+)\s*\|\s*(?P<not_skill>[^|]+)\s*\|\s*(?P<why>[^|]+)\s*\|",
-    re.MULTILINE,
-)
-
-
-def parse_routing_overrides(base_dir: Path) -> list[tuple[str, str]]:
-    """Parse skill-routing.md and return list of (route_to, not_skill) pairs."""
-    routing_md = base_dir / ".claude" / "rules" / "skill-routing.md"
-    if not routing_md.exists():
-        return []
-    content = routing_md.read_text()
-    pairs = []
-    for match in _ROUTING_TABLE_RE.finditer(content):
-        route_to = match.group("route_to").strip().lower()
-        not_skill = match.group("not_skill").strip().lower()
-        # Skip the header separator row
-        if route_to.startswith("---") or not_skill.startswith("---"):
-            continue
-        # Strip parenthetical annotations: "brainstorming (after ideation)" → "brainstorming"
-        route_to = re.sub(r"\s*\(.*?\)\s*$", "", route_to).strip()
-        not_skill = re.sub(r"\s*\(.*?\)\s*$", "", not_skill).strip()
-        pairs.append((route_to, not_skill))
-    return pairs
-
-
-def _is_managed(name_a: str, name_b: str, overrides: list[tuple[str, str]]) -> bool:
-    """Check if a skill pair has a routing override (either ordering)."""
-    a_low = name_a.lower()
-    b_low = name_b.lower()
-    # Also match partial scoped names: "brainstorming" matches "superpowers:brainstorming"
-    for route_to, not_skill in overrides:
-        candidates_a = {a_low, a_low.split(":")[-1]} if ":" in a_low else {a_low}
-        candidates_b = {b_low, b_low.split(":")[-1]} if ":" in b_low else {b_low}
-        # Check both orderings
-        if (candidates_a & {route_to, route_to.split(":")[-1] if ":" in route_to else route_to}
-                and candidates_b & {not_skill, not_skill.split(":")[-1] if ":" in not_skill else not_skill}):
-            return True
-        if (candidates_b & {route_to, route_to.split(":")[-1] if ":" in route_to else route_to}
-                and candidates_a & {not_skill, not_skill.split(":")[-1] if ":" in not_skill else not_skill}):
-            return True
-    return False
 
 
 def collect_skill_profiles(base_dir: Path) -> list[dict]:
@@ -373,9 +333,6 @@ def check_trigger_clashes(
     token_lists = [p["tokens"] for p in profiles]
     vectors = build_tfidf(token_lists)
 
-    # Load routing overrides
-    overrides = parse_routing_overrides(base_dir)
-
     # Collect clashing pairs first (before appending to findings)
     clashing_pairs = []
     pairs_checked = 0
@@ -391,7 +348,6 @@ def check_trigger_clashes(
             shared = top_shared_terms(vectors[i], vectors[j], n=3)
             shared_str = ", ".join(shared) if shared else "none"
             path_str = f"{profiles[i]['path']} + {profiles[j]['path']}"
-            managed = _is_managed(name_a, name_b, overrides)
             fingerprint = tuple(sorted([name_a, name_b]))
 
             clashing_pairs.append({
@@ -400,7 +356,6 @@ def check_trigger_clashes(
                 "sim": sim,
                 "shared_str": shared_str,
                 "path_str": path_str,
-                "managed": managed,
                 "fingerprint": fingerprint,
             })
 
@@ -422,29 +377,16 @@ def check_trigger_clashes(
             known_count += 1
             continue
 
-        if pair["managed"]:
-            findings.append(Finding(
-                severity="info",
-                check="managed-trigger-clash",
-                message=(
-                    f"Skills '{pair['name_a']}' and '{pair['name_b']}' have overlapping triggers "
-                    f"(similarity: {pair['sim']:.2f}, shared terms: {pair['shared_str']}) "
-                    f"— routed in skill-routing.md"
-                ),
-                path=pair["path_str"],
-                action=None,
-            ))
-        else:
-            findings.append(Finding(
-                severity="warning",
-                check="unmanaged-trigger-clash",
-                message=(
-                    f"Skills '{pair['name_a']}' and '{pair['name_b']}' have overlapping triggers "
-                    f"(similarity: {pair['sim']:.2f}, shared terms: {pair['shared_str']})"
-                ),
-                path=pair["path_str"],
-                action="Add a routing override to ~/.claude/rules/skill-routing.md or differentiate the descriptions",
-            ))
+        findings.append(Finding(
+            severity="warning",
+            check="trigger-clash",
+            message=(
+                f"Skills '{pair['name_a']}' and '{pair['name_b']}' have overlapping triggers "
+                f"(similarity: {pair['sim']:.2f}, shared terms: {pair['shared_str']})"
+            ),
+            path=pair["path_str"],
+            action="Differentiate the two descriptions so each skill has a distinct trigger",
+        ))
 
     if known_count > 0:
         findings.append(Finding(

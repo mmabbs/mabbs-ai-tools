@@ -47,24 +47,6 @@ def _make_skill(tmp_path: Path, name: str, description: str) -> Path:
     return skill_dir
 
 
-def _make_routing_md(tmp_path: Path, overrides: list[tuple[str, str, str, str]]):
-    """Create a skill-routing.md with an Overrides table.
-
-    Each override is (signal_context, route_to, not_skill, why).
-    """
-    rules_dir = tmp_path / ".claude" / "rules"
-    rules_dir.mkdir(parents=True, exist_ok=True)
-    lines = [
-        "# Skill Routing\n",
-        "## Overrides\n",
-        "| Signal context | Route to | Not | Why |",
-        "| --- | --- | --- | --- |",
-    ]
-    for ctx, route_to, not_skill, why in overrides:
-        lines.append(f"| {ctx} | {route_to} | {not_skill} | {why} |")
-    (rules_dir / "skill-routing.md").write_text("\n".join(lines) + "\n")
-
-
 def test_identical_descriptions_flagged(tmp_path):
     """Two skills with identical descriptions are flagged as clashing."""
     desc = "Audit and review code for quality issues and patterns"
@@ -72,7 +54,7 @@ def test_identical_descriptions_flagged(tmp_path):
     _make_skill(tmp_path, "skill-b", desc)
 
     report = run_scanner(str(tmp_path))
-    clashes = [f for f in report["findings"] if f["check"] == "unmanaged-trigger-clash"]
+    clashes = [f for f in report["findings"] if f["check"] == "trigger-clash"]
     assert len(clashes) == 1
     assert "skill-a" in clashes[0]["message"]
     assert "skill-b" in clashes[0]["message"]
@@ -85,41 +67,8 @@ def test_different_descriptions_not_flagged(tmp_path):
 
     report = run_scanner(str(tmp_path))
     clashes = [f for f in report["findings"]
-               if f["check"] in ("unmanaged-trigger-clash", "managed-trigger-clash")]
+               if f["check"] == "trigger-clash"]
     assert len(clashes) == 0
-
-
-def test_managed_clash_is_info_severity(tmp_path):
-    """A clashing pair with a routing override gets severity info, not warning."""
-    desc = "Audit and review code for quality issues and patterns"
-    _make_skill(tmp_path, "skill-a", desc)
-    _make_skill(tmp_path, "skill-b", desc)
-    _make_routing_md(tmp_path, [
-        ("When auditing code", "skill-a", "skill-b", "skill-a is more thorough"),
-    ])
-
-    report = run_scanner(str(tmp_path))
-    clashes = [f for f in report["findings"]
-               if f["check"] in ("unmanaged-trigger-clash", "managed-trigger-clash")]
-    assert len(clashes) == 1
-    assert clashes[0]["check"] == "managed-trigger-clash"
-    assert clashes[0]["severity"] == "info"
-
-
-def test_managed_clash_with_annotated_override(tmp_path):
-    """Routing overrides with parenthetical annotations still match."""
-    desc = "Audit and review code for quality issues and patterns"
-    _make_skill(tmp_path, "skill-a", desc)
-    _make_skill(tmp_path, "skill-b", desc)
-    _make_routing_md(tmp_path, [
-        ("When auditing code", "skill-a", "skill-b (after ideation)", "skill-a is primary"),
-    ])
-
-    report = run_scanner(str(tmp_path))
-    clashes = [f for f in report["findings"]
-               if f["check"] in ("unmanaged-trigger-clash", "managed-trigger-clash")]
-    assert len(clashes) == 1
-    assert clashes[0]["check"] == "managed-trigger-clash"
 
 
 def test_threshold_tuning(tmp_path):
@@ -132,13 +81,13 @@ def test_threshold_tuning(tmp_path):
     # At default threshold — may or may not flag (depends on similarity)
     report_default = run_scanner(str(tmp_path))
     clashes_default = [f for f in report_default["findings"]
-                       if f["check"] in ("unmanaged-trigger-clash", "managed-trigger-clash")]
+                       if f["check"] == "trigger-clash"]
     assert len(clashes_default) == 0
 
     # At very low threshold — should flag anything with any overlap
     report_low = run_scanner(str(tmp_path), threshold=0.05)
     clashes_low = [f for f in report_low["findings"]
-                   if f["check"] in ("unmanaged-trigger-clash", "managed-trigger-clash")]
+                   if f["check"] == "trigger-clash"]
     assert len(clashes_low) >= 1
 
 
@@ -160,7 +109,7 @@ def test_multiline_description_parsed(tmp_path):
 
     report = run_scanner(str(tmp_path))
     clashes = [f for f in report["findings"]
-               if f["check"] in ("unmanaged-trigger-clash", "managed-trigger-clash")]
+               if f["check"] == "trigger-clash"]
     assert len(clashes) == 1
 
 
@@ -197,11 +146,11 @@ def test_delta_suppresses_known_clashes(tmp_path):
     report1 = run_scanner(str(tmp_path))
     clashes1 = [f for f in report1["findings"] if "trigger-clash" in f["check"]]
     assert len(clashes1) == 1
-    assert clashes1[0]["check"] == "unmanaged-trigger-clash"
+    assert clashes1[0]["check"] == "trigger-clash"
 
     # Second run — same skills, clash is now known, should be suppressed
     report2 = run_scanner(str(tmp_path))
-    clashes2 = [f for f in report2["findings"] if f["check"] == "unmanaged-trigger-clash"]
+    clashes2 = [f for f in report2["findings"] if f["check"] == "trigger-clash"]
     assert len(clashes2) == 0
     suppressed = [f for f in report2["findings"] if f["check"] == "suppressed-trigger-clashes"]
     assert len(suppressed) == 1
@@ -237,7 +186,7 @@ def test_new_clash_after_known(tmp_path):
 
     # Second run — skill-a/skill-b suppressed, but skill-a/skill-c and skill-b/skill-c are new
     report = run_scanner(str(tmp_path))
-    new_clashes = [f for f in report["findings"] if f["check"] == "unmanaged-trigger-clash"]
+    new_clashes = [f for f in report["findings"] if f["check"] == "trigger-clash"]
     suppressed = [f for f in report["findings"] if f["check"] == "suppressed-trigger-clashes"]
     assert len(new_clashes) == 2  # skill-a/skill-c and skill-b/skill-c
     assert len(suppressed) == 1   # skill-a/skill-b

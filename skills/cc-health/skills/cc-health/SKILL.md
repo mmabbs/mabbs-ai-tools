@@ -19,11 +19,11 @@ Trigger when:
 |--------|---------|----------------|
 | `chats` | `cc-health-chats.py` | Conversations — scan, usage, clean, orphans |
 | `config` | `cc-health-config.py` | Config files, scoping, permissions, MCP |
-| `assets` | `cc-health-assets.py` | Skills, agents, plugins, workflows, trigger clashes |
+| `assets` | `cc-health-assets.py` | Skills, agents, plugins, trigger clashes |
 | `memory` | `cc-health-memory.py` | MEMORY.md entries, stale paths |
 | `version` | (orchestrated inline) | Changelog classification, compat checks |
-| `debris` | `cc-health-debris.py` | Orphaned files, dead refs, TODO markers |
-| `temp` | `cc-health-temp.py` | Scratch files, worktrees, droppings |
+| `debris` | `cc-health-debris.py` | Orphaned agents, TODO/FIXME markers |
+| `temp` | `cc-health-temp.py` | Scratch files, artifact droppings, stale context files |
 | `full` | (all of the above) | Run every domain sequentially |
 
 ## Workflow
@@ -34,7 +34,7 @@ Extract the domain from the user's message. If no domain is specified, ask which
 
 Accepted forms:
 - `/cc-health config`
-- `/cc-health chats --clean --empty-only`
+- `/cc-health chats clean --empty-only`
 - `/cc-health assets --deep`
 - `/cc-health full`
 
@@ -65,10 +65,7 @@ For `full` mode, run each domain sequentially and aggregate findings. For the ch
 
 **Chats output translation:** The chats scanner outputs its own legacy JSON format (a list of conversation objects), NOT the AuditReport schema used by other domains. When aggregating for `full` mode, do NOT treat chats output as Finding objects. Instead, summarize it as: conversation count, short-lived session count, orphan count, custom-named project dirs (`custom_named_dirs`, if any), and total disk usage. Present this summary in a "Chats" section of the report alongside the other domains' finding tables.
 
-**Assets notes — trigger clash detection:** The assets scanner always checks for overlapping skill trigger descriptions using TF-IDF similarity. Pairs above the threshold (default 0.35, tunable via `--clash-threshold`) are flagged as:
-
-- `unmanaged-trigger-clash` (warning) — no routing override in `~/.claude/rules/skill-routing.md` (an optional file; most setups won't have one, so every clash shows as unmanaged)
-- `managed-trigger-clash` (info) — routing override exists
+**Assets notes — trigger clash detection:** The assets scanner always checks for overlapping skill trigger descriptions using TF-IDF similarity. Pairs above the threshold (default 0.35, tunable via `--clash-threshold`) are flagged as `trigger-clash` warnings.
 
 Calibration: unrelated skills typically score below 0.2, related-but-distinct skills land between 0.2 and 0.35, and true overlaps score above 0.5 — lower the threshold to catch subtler collisions, raise it if warnings feel noisy. Run with a custom threshold: `/cc-health assets --clash-threshold 0.25`
 
@@ -84,7 +81,7 @@ The `version` domain does NOT have a standalone scanner script. Orchestrate it i
    ```
    Extract `lastSeenVersion`. (State lives in `~/.claude/`, outside the plugin directory, so plugin upgrades don't wipe it.)
 
-   **First run:** if the file is missing or `lastSeenVersion` is null, there is no baseline to diff against. Write the current version to the state file, tell the user the baseline was initialized (comparisons start next run), and skip the rest of the version domain.
+   **First run:** if the file is missing, or `lastSeenVersion` is null or not a version number (`X.Y.Z`), there is no baseline to diff against. Write the current version to the state file, tell the user the baseline was initialized (comparisons start next run), and skip the rest of the version domain.
 
 2. **Read current version:**
    ```bash

@@ -35,8 +35,23 @@ def parse_args():
     return parser.parse_args()
 
 
+def _agent_has_description(agent_file: Path) -> bool:
+    """True if the agent's frontmatter has a description, so Claude can pick it without being told its name."""
+    try:
+        content = agent_file.read_text()
+    except (OSError, UnicodeDecodeError):
+        return False
+    if not content.startswith("---"):
+        return False
+    try:
+        end = content.index("---", 3)
+    except ValueError:
+        return False
+    return any(line.strip().startswith("description:") for line in content[3:end].split("\n"))
+
+
 def check_orphaned_directories(claude_dir: Path, findings: list[Finding]):
-    """Find agent directories that are never referenced by any file outside themselves."""
+    """Find agents (name.md or name/AGENT.md) that no other file refers to by name."""
 
     for subdir_name in ("agents",):  # skills are user/description-triggered;
                                       # unreferenced is their normal state
@@ -45,10 +60,15 @@ def check_orphaned_directories(claude_dir: Path, findings: list[Finding]):
             continue
 
         for item_dir in target_dir.iterdir():
-            if not item_dir.is_dir():
+            # Agents are either a folder (name/AGENT.md) or a flat file (name.md)
+            if item_dir.is_dir():
+                dir_name = item_dir.name
+                agent_file = item_dir / "AGENT.md"
+            elif item_dir.is_file() and item_dir.suffix == ".md":
+                dir_name = item_dir.stem
+                agent_file = item_dir
+            else:
                 continue
-
-            dir_name = item_dir.name
 
             # Check if this name appears in any file outside its own directory
             referenced_externally = False
@@ -72,13 +92,24 @@ def check_orphaned_directories(claude_dir: Path, findings: list[Finding]):
                     break
 
             if not referenced_externally:
-                findings.append(Finding(
-                    severity="warning",
-                    check="orphaned-directory",
-                    message=f"{subdir_name.rstrip('s').title()} '{dir_name}' is never referenced by any file outside itself",
-                    path=str(item_dir),
-                    action=f"Archive to ~/.claude/archive/{dir_name}/ if no longer needed"
-                ))
+                # An agent with a description can still be picked by Claude on its own,
+                # so being unnamed elsewhere is normal for it. Without one, nothing can reach it.
+                if _agent_has_description(agent_file):
+                    findings.append(Finding(
+                        severity="info",
+                        check="orphaned-directory",
+                        message=f"{subdir_name.rstrip('s').title()} '{dir_name}' is never referenced by name; Claude can still pick it by its description",
+                        path=str(item_dir),
+                        action=None
+                    ))
+                else:
+                    findings.append(Finding(
+                        severity="warning",
+                        check="orphaned-directory",
+                        message=f"{subdir_name.rstrip('s').title()} '{dir_name}' is never referenced by any file outside itself",
+                        path=str(item_dir),
+                        action="Move it out of agents/ if you no longer use it"
+                    ))
 
 
 def check_leftover_markers(claude_dir: Path, findings: list[Finding]):

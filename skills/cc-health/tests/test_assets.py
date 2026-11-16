@@ -102,6 +102,24 @@ def test_plugin_scoped_agent_reference_resolves(tmp_path):
     assert "broken-agent-reference" not in checks
 
 
+def test_invalid_effort_in_flat_agent_file(tmp_path):
+    """Effort values are checked in flat agent files (name.md), not only name/AGENT.md."""
+    agents_dir = tmp_path / ".claude" / "agents"
+    agents_dir.mkdir(parents=True)
+    (agents_dir / "my-agent.md").write_text(textwrap.dedent("""\
+        ---
+        name: my-agent
+        description: Does things
+        effort: turbo
+        ---
+        You are a helpful agent.
+    """))
+
+    report = run_scanner(str(tmp_path))
+    checks = [f["check"] for f in report["findings"]]
+    assert "invalid-effort" in checks
+
+
 def test_bare_model_alias_not_flagged(tmp_path):
     """Agent definitions using bare model aliases are valid and not flagged."""
     claude_dir = tmp_path / ".claude"
