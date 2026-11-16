@@ -1,6 +1,8 @@
 ## Ideate
 
 > **Requires Opus.** This skill is reasoning-intensive — frameworks need to hold a problem's full structure, commit to a cognitive disposition, and produce output that survives adversarial scrutiny. Lower-tier models produce shallow results that defeat the purpose. Solo modes technically function on Sonnet but expect degraded quality; combinations and agent pipelines require Opus.
+>
+> **Fable is also recommended.** It ideates differently from Opus, so the same mode can give you a different kind of result.
 
 Structured thinking frameworks for Claude Code. Sixteen cognitive operations — covering creativity, analysis, and reframing — each accessible as a mode you invoke when you're stuck on a specific type of problem.
 
@@ -73,7 +75,7 @@ Instead of generic "brainstorm this" prompts, Ideate gives Claude a concrete fra
 
 No external tools, APIs, or plugins needed.
 
-> **Tip — effort:** These frameworks are reasoning-heavy. For best results, raise the session effort to `high`, `xhigh`, or `max` (e.g. `/effort max`) before invoking — especially for combinations, where multiple frameworks run in sequence or across agents. Note: `xhigh` is only available on Opus 4.8+; Opus 4.6 supports `high` and `max`.
+> **Tip — effort:** These frameworks are reasoning-heavy. For best results, raise the session effort to `high` (`/effort high`) before invoking — especially for combinations, where multiple frameworks run in sequence or across agents.
 
 ### Installation
 
@@ -137,3 +139,11 @@ The first eight modes — `collide`, `state`, `lens`, `assume`, `pattern`, `boun
 **What's mine vs. theirs:** the taxonomy and core framing of those eight modes derive from the original. The other eight modes (`invert`, `axiom`, `ripple`, `subtract`, `analog`, `constrain`, `timeshift`, `steelman`), all framework prompts and references, the role-based combination system, the orchestration logic, and the intake triage are newly authored or substantially rewritten by me. Domain-agnostic write-ups of all sixteen live in `references/domain-agnostic-thinking-skills.md`. Errors and changes are my own.
 
 If the original author objects to this attribution or to republication of the derived material, contact me and I'll comply. See the repository [`NOTICE`](../../NOTICE) for how licensing is scoped around this third-party material.
+
+## Changelog
+
+### 2026-11-16
+
+- The description says when to use the skill.
+- README: Fable is also recommended, the effort tip is now `high`, and model-version notes are removed.
+- Added contents lists to the three long reference files.

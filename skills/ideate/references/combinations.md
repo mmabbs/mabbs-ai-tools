@@ -2,6 +2,25 @@
 
 All sensible mode combinations organized by category. Each entry: the pair, rationale, and a concrete example. Load `orchestration.md` for execution instructions.
 
+## Contents
+
+- Same-Role Combinations
+  - Generative + Generative
+  - Adversarial + Adversarial
+  - Integrative + Integrative
+- Cross-Role Combinations
+  - Generative → Adversarial
+  - Generative → Integrative
+  - Adversarial → Integrative
+  - Integrative → Adversarial
+  - Integrative → Generative
+  - Adversarial → Generative
+- Three-Mode Pipelines
+  - Generative → Adversarial → Integrative
+  - Other Pipeline Shapes
+- Excluded
+- Unlisted Combinations
+
 ## Same-Role Combinations
 
 Run in-context, sequential. No agents. Second step sees first step's output.

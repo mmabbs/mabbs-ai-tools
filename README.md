@@ -68,7 +68,7 @@ Some skills assume a particular environment. Each skill's own `README.md` docume
 - **Plugin install** — `cc-health` is a plugin, not a standalone skill. It requires the local plugin install flow (`claude plugin marketplace add` + `claude plugin install`). See its README for the full steps.
 - **Subagent-heavy** — `config-audit` spawns eight parallel scanner agents plus one reasoning agent per run. It targets Sonnet for scanning and Opus for the cross-layer reasoning; without those models it falls back to your session model.
 - **Desktop upload** — `research-auditor-desktop` is for claude.ai / Claude Desktop, not Claude Code: don't copy it into `~/.claude/skills/`. Rename the folder to `research-auditor` and upload it as a ZIP via Settings → Capabilities → Skills — its README has the exact packaging steps.
-- **Model requirements** — `ideate` requires Opus. Its frameworks are reasoning-intensive; lower-tier models produce shallow output that defeats the purpose. Solo modes technically function on Sonnet but with degraded quality; combinations and agent pipelines are not recommended without Opus.
+- **Model requirements** — `ideate` requires Opus. Its frameworks are reasoning-intensive; lower-tier models produce shallow output that defeats the purpose. Solo modes technically function on Sonnet but with degraded quality; combinations and agent pipelines are not recommended without Opus. Fable is also recommended; it ideates differently from Opus.
 
 ## Maintenance and contributions
 

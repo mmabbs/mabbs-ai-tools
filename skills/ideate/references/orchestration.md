@@ -2,6 +2,18 @@
 
 How to execute combinations. The skill dispatches here whenever two or more modes are invoked together.
 
+## Contents
+
+- Role Dispositions
+- In-Context Execution
+- Cross-Role Two-Mode Execution
+  - In-Context Path
+  - Agent Path
+- Three-Mode Pipeline Execution
+  - Pipeline Sequence
+- Output Note Conventions
+- Agent Prompt Template
+
 ## Role Dispositions
 
 Inject the appropriate disposition into every agent prompt. These are the exact instructions that establish each agent's relationship to context.

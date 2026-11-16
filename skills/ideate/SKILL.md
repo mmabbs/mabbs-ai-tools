@@ -1,6 +1,6 @@
 ---
 name: ideate
-description: Structured thinking frameworks for strategy, decision-making, and reframing. 16 modes for creativity, analysis, and stress-testing. Not for coding tasks — for thinking through problems.
+description: "Structured thinking frameworks for strategy, decision-making, and reframing. 16 modes for creativity, analysis, and stress-testing. Use when the user is stuck on a problem and wants new angles, wants a plan or decision stress-tested before committing, needs conflicting advice reconciled, or says things like I'm stuck, poke holes in this, or what am I missing. Also runs when invoked as /ideate with a mode. Not for coding tasks — for thinking through problems."
 argument-hint: collide|state|lens|assume|pattern|bound|scaffold|simplify|invert|axiom|ripple|subtract|analog|constrain|timeshift|steelman
 ---
 

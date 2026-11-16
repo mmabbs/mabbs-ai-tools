@@ -2,6 +2,8 @@
 
 Sixteen cognitive operations, stripped of domain-specific framing to apply universally. Operations 1–8 are adapted from the MonadFramework; operations 9–16 are original extensions built in the same spirit. Each is a structured way to approach a specific type of problem.
 
+**Contents:** 1. Forced Recombination · 2. State-Task Matching · 3. Multi-Lens Synthesis · 4. Assumption Archaeology · 5. Invariant Extraction · 6. Bounded Exploration · 7. Symbolic Scaffolding · 8. Upstream Unification · 9. Inversion · 10. First Principles · 11. Second-Order Effects · 12. Via Negativa · 13. Analogical Transfer · 14. Constraint Play · 15. Temporal Shifting · 16. Steelmanning · Quick Reference · What Makes These Transferable
+
 ---
 
 ### 1. Forced Recombination ("Collision-Zone Thinking")
