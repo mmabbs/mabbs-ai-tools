@@ -26,12 +26,12 @@ def test_orphaned_agent_directory(tmp_path):
     # Create an agent that IS referenced
     used_agent = agents_dir / "used-agent"
     used_agent.mkdir(parents=True)
-    (used_agent / "AGENT.md").write_text("---\nmodel: claude-opus-4-6\n---\nYou are helpful.")
+    (used_agent / "AGENT.md").write_text("---\nmodel: opus\n---\nYou are helpful.")
 
     # Create an agent that is NOT referenced anywhere
     orphan_agent = agents_dir / "orphan-agent"
     orphan_agent.mkdir(parents=True)
-    (orphan_agent / "AGENT.md").write_text("---\nmodel: claude-opus-4-6\n---\nYou are forgotten.")
+    (orphan_agent / "AGENT.md").write_text("---\nmodel: opus\n---\nYou are forgotten.")
 
     # Create a CLAUDE.md that only references used-agent
     (claude_dir / "CLAUDE.md").write_text('Spawn Agent({subagent_type: "used-agent", prompt: "hi"})')

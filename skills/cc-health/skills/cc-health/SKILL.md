@@ -1,6 +1,6 @@
 ---
 name: cc-health
-description: Audit Claude Code infrastructure health — config, skills/agents/plugins, memory, version compat, conversations, debris, temp files. Report-first, fix on confirmation.
+description: "Audit Claude Code infrastructure health — config, skills/agents/plugins, memory, version compat, conversations, debris, temp files. Report-first, fix on confirmation. Use when the user asks for a health check or cleanup of their Claude Code setup, suspects broken skill or agent references or stale memory paths, wants to know what old conversations and temp files are taking up, or asks what a Claude Code update changed for them."
 argument-hint: chats|config|assets|memory|version|debris|temp|full
 ---
 
@@ -67,7 +67,7 @@ For `full` mode, run each domain sequentially and aggregate findings. For the ch
 
 **Assets notes — trigger clash detection:** The assets scanner always checks for overlapping skill trigger descriptions using TF-IDF similarity. Pairs above the threshold (default 0.35, tunable via `--clash-threshold`) are flagged as:
 
-- `unmanaged-trigger-clash` (warning) — no routing override in `skill-routing.md`
+- `unmanaged-trigger-clash` (warning) — no routing override in `~/.claude/rules/skill-routing.md` (an optional file; most setups won't have one, so every clash shows as unmanaged)
 - `managed-trigger-clash` (info) — routing override exists
 
 Calibration: unrelated skills typically score below 0.2, related-but-distinct skills land between 0.2 and 0.35, and true overlaps score above 0.5 — lower the threshold to catch subtler collisions, raise it if warnings feel noisy. Run with a custom threshold: `/cc-health assets --clash-threshold 0.25`
@@ -102,7 +102,7 @@ The `version` domain does NOT have a standalone scanner script. Orchestrate it i
    Spawn the changelog-classifier agent with the changelog slice:
    ```
    Agent({
-     subagent_type: "changelog-classifier",
+     subagent_type: "cc-health:changelog-classifier",
      prompt: "Classify these changelog entries:\n\n<slice>"
    })
    ```
@@ -112,7 +112,7 @@ The `version` domain does NOT have a standalone scanner script. Orchestrate it i
    For each classified entry, extract the concrete identifier the change affects and grep the user's config files for it (e.g., for "Renamed `workflow` keyword to `ultracode`", grep for `workflow`):
    - `settings.json`, `settings.local.json` for setting keys and env vars
    - `~/.claude/skills/*/SKILL.md` for trigger keywords
-   - `~/.claude/agents/*/AGENT.md` for model/effort references
+   - `~/.claude/agents/*.md` and `~/.claude/agents/*/AGENT.md` for model/effort references
 
 7. **Report only relevant hits.**
 
@@ -177,7 +177,7 @@ Never fix without explicit confirmation. Group similar fixes when count > 5.
 ## Constraints
 
 - Report-first: scanners are read-only. Only fix after user confirmation.
-- Skip `~/.claude/archive/` in all scans (it's intentionally "dead").
+- The scanners skip any folder named `archive` under `~/.claude/`. It's an optional place to park retired config; nothing depends on it existing.
 - Skip files modified in the last hour (active session protection) in chats/clean.
 - Never delete the current active session.
 - The `version` domain updates state AFTER reporting — never before (so re-runs are safe).

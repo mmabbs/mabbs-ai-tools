@@ -8,7 +8,7 @@ Checks:
 3. Dead @-imports — CLAUDE.md @-import chains pointing at missing files
 4. Deprecated duplicates — archived skills still in active directory
 5. (--deep only, handled by SKILL.md) Description drift
-6. Model/effort validity — bare aliases or invalid effort values
+6. Effort validity — invalid effort values in agent definitions
 7. Trigger clashes -- overlapping skill trigger descriptions
 
 Usage:
@@ -28,9 +28,6 @@ sys.path.insert(0, str(Path(__file__).parent))
 from lib.schema import AuditReport, Finding, progress, load_state, save_state
 from lib.frontmatter import parse_skill_frontmatter
 from lib.tfidf import tokenize, build_tfidf, cosine_similarity, top_shared_terms
-
-# Valid full model IDs (pattern: claude-<name>-<version> with optional suffix)
-MODEL_ID_PATTERN = re.compile(r"^claude-[a-z]+-\d+(-\d+)?(-\d{8})?(\[\d+[a-z]?\])?$")
 
 # Valid effort levels
 VALID_EFFORTS = {"low", "medium", "high", "xhigh", "max"}
@@ -104,6 +101,8 @@ def find_all_agent_names(base_dir: Path) -> set[str]:
                 for d in plugin_root.iterdir():
                     if d.is_dir() and (d / "AGENT.md").exists():
                         names.add(d.name)
+                    elif d.is_file() and d.suffix == ".md":
+                        names.add(d.stem)
 
     return names
 
@@ -144,7 +143,9 @@ def check_broken_agent_refs(base_dir: Path, available_agents: set[str], findings
         content = skill_md.read_text()
         for match in AGENT_TYPE_RE.finditer(content):
             agent_name = match.group(1)
-            if agent_name not in available_agents and agent_name not in builtins:
+            # Handle plugin-scoped names like "my-plugin:reviewer"
+            base_name = agent_name.split(":")[-1] if ":" in agent_name else agent_name
+            if base_name not in available_agents and agent_name not in available_agents and agent_name not in builtins:
                 findings.append(Finding(
                     severity="error",
                     check="broken-agent-reference",
@@ -226,8 +227,8 @@ def check_deprecated_duplicates(base_dir: Path, findings: list[Finding]):
             ))
 
 
-def check_model_effort_validity(base_dir: Path, findings: list[Finding]):
-    """Check agent definitions for bare model aliases and invalid effort values."""
+def check_effort_validity(base_dir: Path, findings: list[Finding]):
+    """Check agent definitions for invalid effort values."""
     claude_dir = base_dir / ".claude"
     agents_dir = claude_dir / "agents"
 
@@ -253,17 +254,7 @@ def check_model_effort_validity(base_dir: Path, findings: list[Finding]):
 
         for line in frontmatter.split("\n"):
             line = line.strip()
-            if line.startswith("model:"):
-                model_val = line.split(":", 1)[1].strip().strip("'\"")
-                if model_val and not MODEL_ID_PATTERN.match(model_val):
-                    findings.append(Finding(
-                        severity="warning",
-                        check="invalid-model-id",
-                        message=f"Agent uses bare model alias '{model_val}' instead of full ID",
-                        path=str(agent_md),
-                        action=f"Use full model ID (e.g., 'claude-opus-4-6' instead of '{model_val}')"
-                    ))
-            elif line.startswith("effort:"):
+            if line.startswith("effort:"):
                 effort_val = line.split(":", 1)[1].strip().strip("'\"")
                 if effort_val and effort_val not in VALID_EFFORTS:
                     findings.append(Finding(
@@ -499,8 +490,8 @@ def main():
     check_dead_at_imports(base_dir, findings)
     checks_run += 1
 
-    progress("Checking model/effort validity...")
-    check_model_effort_validity(base_dir, findings)
+    progress("Checking effort validity...")
+    check_effort_validity(base_dir, findings)
     checks_run += 1
 
     progress("Checking for deprecated duplicates...")

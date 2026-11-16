@@ -55,34 +55,35 @@ A SessionStart hook nudges you when Claude Code updates, so you know to run `/cc
 
 ## Installation
 
-1. Clone or copy this folder into your local plugins directory:
+1. Copy this folder into your local plugins directory:
 
    ```bash
+   mkdir -p ~/.claude/plugins/local
    cp -r cc-health ~/.claude/plugins/local/cc-health
    ```
 
-2. Create the marketplace wrapper (required for local plugin discovery):
+2. Create the local marketplace file at `~/.claude/plugins/local/.claude-plugin/marketplace.json`. Claude Code needs it to discover plugins in that folder:
 
-   ```bash
-   mkdir -p ~/.claude/plugins/local/cc-health/.claude-plugin
-   # plugin.json is already included — verify it exists:
-   cat ~/.claude/plugins/local/cc-health/.claude-plugin/plugin.json
+   ```json
+   {
+     "name": "local",
+     "owner": { "name": "Your Name" },
+     "plugins": [
+       { "name": "cc-health", "source": "./cc-health" }
+     ]
+   }
    ```
 
-3. Register the marketplace and install:
+   If you already have this file, add the `cc-health` entry to its `plugins` list instead.
+
+3. Register the local plugins folder and install:
 
    ```bash
-   claude plugin marketplace add ~/.claude/plugins/local/cc-health
-   claude plugin install cc-health
+   claude plugin marketplace add ~/.claude/plugins/local
+   claude plugin install cc-health@local
    ```
 
-4. Enable the plugin:
-
-   ```bash
-   claude plugin enable cc-health
-   ```
-
-5. Restart Claude Code. The SessionStart hook will initialize on first run.
+4. Restart Claude Code. The SessionStart hook will initialize on first run.
 
 ## Usage
 
@@ -106,7 +107,7 @@ A SessionStart hook nudges you when Claude Code updates, so you know to run `/cc
 |-----------------------------------------|-----------------------------------------------------------|
 | `skills/cc-health/SKILL.md`             | Main skill instructions — Claude's orchestration guide    |
 | `skills/cc-health/references/`          | Reference docs for path encoding and config load semantics|
-| `agents/changelog-classifier/AGENT.md`  | Agent definition for version-domain changelog analysis    |
+| `agents/changelog-classifier.md`        | Agent definition for version-domain changelog analysis    |
 | `scripts/cc-health-*.py`               | Domain scanner scripts (one per domain)                   |
 | `scripts/lib/`                          | Shared Python modules (schema, frontmatter, TF-IDF)      |
 | `scripts/version-detect.sh`            | SessionStart hook script — detects CC version changes     |
@@ -129,6 +130,14 @@ Checks that were scoped but never built. Listed here so nobody assumes the scann
 - Temp: abandoned git worktree detection
 
 ## Changelog
+
+### 2026-11-16
+
+- Fixed the version check. The changelog classifier is now a flat agent file (`agents/changelog-classifier.md`) called as `cc-health:changelog-classifier`; the old name did not resolve.
+- The classifier runs on Sonnet. Its `effort: high` setting is gone.
+- Install steps corrected: create the local marketplace file, then register `~/.claude/plugins/local` (not the plugin folder) and install `cc-health@local`.
+- The assets scanner no longer warns about bare model aliases such as `opus` or `sonnet`. It recognizes flat agent files in plugins and plugin-scoped agent names.
+- The description says when to use the skill. The archive folder and `skill-routing.md` are described as optional.
 
 ### 2026-07-19 — v2.0.1
 

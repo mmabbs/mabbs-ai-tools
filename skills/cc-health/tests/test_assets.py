@@ -75,8 +75,35 @@ def test_dead_at_import(tmp_path):
     assert "dead-at-import" in checks
 
 
-def test_invalid_model_id(tmp_path):
-    """Agent definitions using bare model aliases are flagged."""
+def test_plugin_scoped_agent_reference_resolves(tmp_path):
+    """A plugin-scoped subagent_type resolves to a flat agent file in that plugin."""
+    claude_dir = tmp_path / ".claude"
+    plugin_dir = claude_dir / "plugins" / "local" / "my-plugin"
+    (plugin_dir / "agents").mkdir(parents=True)
+    (plugin_dir / "agents" / "reviewer.md").write_text(textwrap.dedent("""\
+        ---
+        name: reviewer
+        description: Reviews things
+        ---
+        You review things.
+    """))
+    skill_dir = plugin_dir / "skills" / "my-skill"
+    skill_dir.mkdir(parents=True)
+    (skill_dir / "SKILL.md").write_text(textwrap.dedent("""\
+        ---
+        name: my-skill
+        description: Uses the plugin's own agent
+        ---
+        Spawn Agent({subagent_type: "my-plugin:reviewer", prompt: "review"})
+    """))
+
+    report = run_scanner(str(tmp_path))
+    checks = [f["check"] for f in report["findings"]]
+    assert "broken-agent-reference" not in checks
+
+
+def test_bare_model_alias_not_flagged(tmp_path):
+    """Agent definitions using bare model aliases are valid and not flagged."""
     claude_dir = tmp_path / ".claude"
     agents_dir = claude_dir / "agents" / "my-agent"
     agents_dir.mkdir(parents=True)
@@ -92,7 +119,7 @@ def test_invalid_model_id(tmp_path):
 
     report = run_scanner(str(tmp_path))
     checks = [f["check"] for f in report["findings"]]
-    assert "invalid-model-id" in checks
+    assert "invalid-model-id" not in checks
 
 
 def test_clean_assets_no_findings(tmp_path):
@@ -113,7 +140,7 @@ def test_clean_assets_no_findings(tmp_path):
 
     (agents_dir / "AGENT.md").write_text(textwrap.dedent("""\
         ---
-        model: claude-opus-4-6
+        model: opus
         effort: high
         ---
         You are a good agent.
