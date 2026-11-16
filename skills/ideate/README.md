@@ -70,7 +70,7 @@ Instead of generic "brainstorm this" prompts, Ideate gives Claude a concrete fra
 | Dependency | Required? | Without it |
 |---|---|---|
 | Claude Code | Yes | The skill runs inside Claude Code's skill system |
-| Opus model | Yes | Frameworks produce shallow, generic output on lower-tier models; combinations and pipelines are not recommended without Opus |
+| Opus model | Yes | Frameworks produce shallow, generic output on lower-tier models; combinations and agent pipelines require Opus |
 | Agent tool | For combinations | Solo modes work without it; cross-role combos and three-mode pipelines use agents for independence between frameworks |
 
 No external tools, APIs, or plugins needed.
@@ -101,9 +101,9 @@ Modes are classified into roles that determine how combinations execute:
 | **Adversarial** | `assume`, `invert`, `steelman`, `subtract`, `constrain` | Examines with fresh eyes |
 | **Integrative** | `lens`, `pattern`, `ripple`, `simplify`, `timeshift` | Sees the full picture |
 
-- **Same role** (e.g., `axiom+scaffold`) — runs sequentially in-context
+- **Same role** (two or three modes, e.g., `axiom+scaffold`) — runs sequentially in-context
 - **Cross-role, two modes** (e.g., `axiom+invert`) — asks your preference: in-context or independent agents
-- **Three modes** (e.g., `collide+steelman+lens`) — always spawns agents for independence
+- **Three modes across roles** (e.g., `collide+steelman+lens`) — always spawns agents for independence. Each agent saves its output as a Markdown note in a folder you confirm (default: the current directory)
 
 The `references/combinations.md` file catalogs ~110 sensible pairings with rationale and examples. The catalog is only loaded when a combination or guided-mode request is made — solo mode invocations don't touch it.
 
@@ -147,3 +147,5 @@ If the original author objects to this attribution or to republication of the de
 - The description says when to use the skill.
 - README: Fable is also recommended, the effort tip is now `high`, and model-version notes are removed.
 - Added contents lists to the three long reference files.
+- Three modes that share one role run in-context. Three modes across roles use agents, and the README now says those runs save notes.
+- Fixed the step numbering in `references/orchestration.md`. The Opus wording is consistent across the README.

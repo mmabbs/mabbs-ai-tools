@@ -81,29 +81,29 @@ This doesn't create true independence but signals the cognitive shift.
 
 1. **Confirm output location.** Before spawning any agents, ask the user where pipeline notes should be saved. Default suggestion: current working directory. Pass the confirmed path to each agent.
 
-3. **Parse the pipeline.** Identify which modes belong to which roles. Any ordering works, but the typical shape is Generative → Adversarial → Integrative.
+2. **Parse the pipeline.** Identify which modes belong to which roles. Any ordering works, but the typical shape is Generative → Adversarial → Integrative.
 
-4. **Spawn generative agent(s).** If the pipeline has multiple generative modes, spawn them in parallel (multiple Agent tool calls in one message). Each agent gets:
+3. **Spawn generative agent(s).** If the pipeline has multiple generative modes, spawn them in parallel (multiple Agent tool calls in one message). Each agent gets:
    - Generative disposition
    - Its specific framework reference
    - The problem context
    - Instruction to write full output as a note (see conventions below)
 
-5. **Collect generative outputs.** Extract conclusions — not reasoning chains.
+4. **Collect generative outputs.** Extract conclusions — not reasoning chains.
 
-6. **Spawn adversarial agent.** Single Agent tool call. Gets:
+5. **Spawn adversarial agent.** Single Agent tool call. Gets:
    - Adversarial disposition
    - Its framework reference
    - ONLY the generative conclusions
    - Instruction to write critique as a note
 
-7. **Spawn integrative agent.** Single Agent tool call. Gets:
+6. **Spawn integrative agent.** Single Agent tool call. Gets:
    - Integrative disposition
    - Its framework reference
    - ALL previous outputs — generative AND adversarial, full text (integrative agents benefit from maximum context)
    - Instruction to write synthesis as a note
 
-8. **Present in-context.** Summarize the synthesis with links to all notes.
+7. **Present in-context.** Summarize the synthesis with links to all notes.
 
 ## Output Note Conventions
 

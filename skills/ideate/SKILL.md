@@ -121,9 +121,9 @@ Each mode belongs to a role based on its relationship to context. This determine
 
 When two or more modes are invoked together:
 
-1) **Same role** (e.g., `axiom+scaffold`, `invert+subtract`) → Run in-context, sequential. No agents. Second step sees first step's output.
+1) **Same role, two or three modes** (e.g., `axiom+scaffold`, `invert+subtract+constrain`) → Run in-context, sequential. No agents. Each step sees the previous step's output.
 2) **Cross-role, two modes** (e.g., `axiom+invert`) → Ask the user: in-context (faster, you see the full chain and can participate) or independent agents (stronger independence, no contamination between roles)?
-3) **Three modes** (e.g., `collide+steelman+lens`) → Always spawn agents. Each role runs independently; integrative agent sees all outputs.
+3) **Three modes across more than one role** (e.g., `collide+steelman+lens`) → Always spawn agents. Each role runs independently; integrative agent sees all outputs.
 
 **Defaults when asking:** If the problem is exploratory (brainstorming), suggest in-context. If evaluative (stress-testing a decision), suggest agents.
 
