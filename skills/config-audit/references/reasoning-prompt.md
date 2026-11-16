@@ -1,6 +1,6 @@
 # Reasoning Agent Prompt Template
 
-Fill in the 8 inventory file paths, the 8 criteria doc paths (full paths to `references/criteria-*.md`), and the resolved `<workspace>` path, then pass to the reasoning agent (Opus, max effort).
+Fill in the 8 inventory file paths, the 8 criteria doc paths (full paths to `references/criteria-*.md`), and the resolved `<workspace>` path, then pass to the reasoning agent (Opus).
 
 ---
 

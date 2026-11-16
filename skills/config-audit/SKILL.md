@@ -95,7 +95,7 @@ Write inventories to `<scratchpad>/config-audit/`. `<scratchpad>` is the session
 
 ## Phase 2: Reason
 
-After all scanners complete, spawn a **single reasoning agent** at **Opus** with **max effort**. This agent reads all 8 inventory files plus all 8 criteria docs, produces findings, and writes them to `<workspace>/findings.md`.
+After all scanners complete, spawn a **single reasoning agent** on **Opus**. This agent reads all 8 inventory files plus all 8 criteria docs, produces findings, and writes them to `<workspace>/findings.md`.
 
 ### Reasoning Agent Prompt
 
@@ -111,7 +111,7 @@ After opening, give a one-line summary: finding counts by category and any `brok
 
 When the user selects findings:
 
-- **Relocations**: move the content to the new layer. Archive the original (don't delete — move to `~/.claude/archive/`). Show the user what changed.
+- **Relocations**: move the content to the new layer. Archive the original (don't delete — move it to `<archive-folder>`; ask the user where that is the first time). Show the user what changed.
 - **Consolidations**: draft the bundle structure (plugin layout, combined skill, etc.) and present for review before writing.
 - **Net-New**: draft the new config item and present for review before writing.
 

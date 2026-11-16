@@ -8,9 +8,9 @@ The workflow:
 
 1. Locates eight criteria docs that define what earns its keep in each config layer and the boundary tests between adjacent layers — read by the reasoning agent, not the orchestrator.
 2. Spawns eight scanner agents in parallel (one per config type, on Sonnet) that inventory every item with its purpose, cross-references, and content character (behavioral, context, pointer, procedural, enforcement).
-3. Spawns a single reasoning agent (on Opus, max effort) that reads all inventories plus all criteria docs and writes findings to a session workspace file.
+3. Spawns a single reasoning agent (on Opus) that reads all inventories plus all criteria docs and writes findings to a session workspace file.
 4. Presents findings in three categories — relocations, consolidations, net-new — plus a "Correctly Placed" section, so silence is never ambiguous.
-5. Executes only the findings you choose to act on. Originals are archived, never deleted.
+5. Executes only the findings you choose to act on. Originals are moved to an archive folder you choose, never deleted.
 
 ## Sample output
 
@@ -94,6 +94,11 @@ Findings quality depends on how much config you actually have — a fresh setup 
 | `references/criteria-memory.md` | What belongs in memory files; red flags, staleness discipline |
 
 ## Changelog
+
+### 2026-11-16
+
+- The reasoning agent is no longer pinned to max effort.
+- Archived originals go to a folder you choose (`<archive-folder>`) instead of a fixed path.
 
 ### 2026-07-19
 
