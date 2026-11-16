@@ -1,5 +1,7 @@
 # Criteria: Hooks
 
+_Version-specific facts in this doc (limits, counts, defaults) were checked against Claude Code 2.1.289 docs and changelog on 2026-10-05._
+
 What makes something a hook (settings.json `"hooks"`, plugin `hooks/hooks.json`, or skill/agent frontmatter) rather than a rule, a skill, an agent, or a permission entry.
 
 ## What Earns Its Keep
@@ -7,7 +9,7 @@ What makes something a hook (settings.json `"hooks"`, plugin `hooks/hooks.json`,
 A hook earns its keep when it provides at least one of four mechanical benefits:
 
 1. **Guaranteed execution.** The harness fires hooks; the model can't forget, skip, or rationalize around them. This is the only config type with enforcement semantics — everything else (rules, CLAUDE.md, skills) is guidance the model follows with judgment and occasional drift.
-2. **Event coupling.** ~30 lifecycle events cover the full session: tool calls (PreToolUse, PostToolUse, PostToolUseFailure), turns (UserPromptSubmit, Stop), sessions (SessionStart, SessionEnd), subagents, tasks, compaction, config changes, file watches (FileChanged), worktrees, and more. Nothing else in the config system can react to "a file changed on disk" or "Claude is about to stop."
+2. **Event coupling.** 33 lifecycle events cover the full session: tool calls (PreToolUse, PostToolUse, PostToolUseFailure), turns (UserPromptSubmit, Stop), sessions (SessionStart, SessionEnd), subagents, tasks, compaction, config changes, file watches (FileChanged), worktrees, and more. Nothing else in the config system can react to "a file changed on disk" or "Claude is about to stop."
 3. **Power to intervene.** Hooks don't just observe — they block tool calls (`permissionDecision: deny`), rewrite tool inputs (`updatedInput`), block Claude from stopping (`decision: block`), inject context (`additionalContext`), and modify tool output. No other type can veto or alter the harness's behavior.
 4. **Zero-context operation.** Hook logic runs outside the model — a shell script, HTTP call, or MCP tool costs no conversation tokens until it chooses to inject something. Async hooks run in the background without stalling the turn at all.
 

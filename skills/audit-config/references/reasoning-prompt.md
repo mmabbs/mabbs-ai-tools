@@ -30,15 +30,43 @@ For each: what should be created, what config type it should be, and which exist
 - **Ignore dead-weight items.** Empty files, no-op scripts, orphaned caches — scanners tag these `[dead-weight]` but cleanup is a separate maintenance concern, not yours. Don't produce findings for them. Focus on placement: is this item in the right layer?
 - Rank findings within each category by impact — what would most improve the setup if acted on.
 
-**Systematic boundary sweeps (mandatory):**
+**Boundary sweeps.** Run every item in these groups through the listed test:
 
-Don't cherry-pick — sweep every item through its high-traffic boundary tests. Specifically:
-
-1. **Every CLAUDE.md section with content character "behavioral" or "enforcement"**: test against the rules boundary. Path-specific instructions paying always-on tokens for sometimes-relevant guidance are relocation candidates. Walk each behavioral section, not just the ones that jump out. **Test at the instruction level, not the heading level** — a parent heading ("Critical Operational Rules") cannot receive a batch verdict that cascades to its children. Each sub-rule may have a different boundary answer (one might be path-specific while another is genuinely project-wide). Clear each instruction individually.
+1. **Every CLAUDE.md section with content character "behavioral" or "enforcement"**: test against the rules boundary. Path-specific instructions paying always-on tokens for sometimes-relevant guidance are relocation candidates. **Test at the instruction level, not the heading level** — a parent heading ("Critical Operational Rules") cannot receive a batch verdict that cascades to its children. Each sub-rule may have a different boundary answer (one might be path-specific while another is genuinely project-wide). Clear each instruction individually.
 2. **Every memory file with content character "behavioral" or "enforcement"**: test against the imperative-voice boundary. A memory that prescribes behavior ("Don't...", "Always...", "When X, do Y") or explicitly extends a named rule file is a relocation candidate. The "resolve fuzzy to memory" preference still applies — but you must examine and state your reasoning, not skip silently.
 3. **Every project-scoped item**: test whether it applies to other projects. Every global item: test whether it references project-specific paths or content.
 4. **Memory directories that are empty or contain no files**: note this in findings as "Memory: no files present in [project]" — don't silently skip. The user infers the state from what you report.
 
 **Silence is not clearance.** Every item you examine must appear either in findings or in the "Correctly Placed" section — an item that appears in neither is an item you didn't examine, and that's a gap, not an answer. To keep the section readable at scale, group correctly-placed items by config type with a count and the item names; give an individual one-line reasoning only for items that required a boundary test (behavioral CLAUDE.md sections, imperative-voice memory files, project-vs-global scoping calls).
 
-**Output:** Write your full findings to `<workspace>/findings.md` — a numbered list, grouped by category, continuously numbered across categories, with the "Correctly Placed" section at the end. Return only a one-line summary as your reply: finding counts per category and any `broken` items.
+**Output:** Write your full findings to `<workspace>/findings.md` in this format, numbered continuously across categories:
+
+```markdown
+# Audit Config — YYYY-MM-DD
+
+Scanned: [config types and item counts, from each inventory's Summary]
+
+## Relocations
+
+### 1. [Title]
+- **Current:** ...
+- **Recommended:** ...
+- **Why:** [the boundary test that applies]
+- **Impact:** `broken` or `suboptimal` — [what concretely improves]
+
+## Consolidations
+
+### N. [Title]
+...
+
+## Net-New
+
+### N. [Title]
+...
+
+## Correctly Placed
+
+[Grouped by config type, as described above. Add "Memory: no files present in [project]" for each empty memory directory.]
+```
+
+Return only a one-line summary as your reply: finding counts per category and any `broken` items.

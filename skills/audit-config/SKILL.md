@@ -22,14 +22,7 @@ Arguments compose: `/audit-config project web-platform save <to/path>` scans one
 
 ## Progress Communication
 
-This skill runs multiple phases with parallel agents. The user must never sit in silence wondering what's happening. At each phase boundary, tell the user what's about to happen and what to expect:
-
-- Before spawning scanners: "Launching 8 scanner agents in parallel (one per config type). This will take 1-2 minutes — I'll report back when they've all returned."
-- As scanners return: Brief status updates as results come in, e.g., "6 of 8 scanners done."
-- Before spawning the reasoning agent: "All inventories in. Launching the reasoning agent — this is the cross-layer analysis, expect ~1-2 minutes."
-- When findings are ready: Present them.
-
-If any agent takes unusually long or fails, say so immediately rather than waiting silently.
+This skill runs several phases with parallel agents, and the user sees nothing while they work. Post a one-line update when the scanners launch, as they return, when the reasoning agent launches, and when findings are ready. If an agent fails or runs long, say so right away.
 
 ## Before Scanning
 
@@ -56,7 +49,7 @@ Before Phase 1, build the list of project paths: if a CLAUDE.md in scope (projec
 
 The scan covers:
 - **Global config** — `~/.claude/` (rules, skills, agents, settings, CLAUDE.md) — always included
-- **Project config** — `<project-path>/.claude/` (rules, skills, settings, CLAUDE.md) — all projects, or just the named one
+- **Project config** — `<project-path>/.claude/` (rules, skills, agents, settings) plus the project's `CLAUDE.md`, `.claude/CLAUDE.md`, and `CLAUDE.local.md` — all projects, or just the named one
 - **Project memory** — `~/.claude/projects/<project-slug>/memory/` — all projects, or just the named one
 - **Shared infrastructure** — plugins, MCP servers, hooks (which span all projects)
 
@@ -76,18 +69,18 @@ Use **Sonnet** for scanners — they're doing extraction, not synthesis. If Sonn
 |---|---|
 | Rules | `~/.claude/rules/` + each project's `.claude/rules/` |
 | Skills | `~/.claude/skills/` + each project's `.claude/skills/`. Read each SKILL.md frontmatter + first ~30 lines for purpose |
-| Hooks | `~/.claude/settings.json` + `~/.claude/settings.local.json` + each project's `.claude/settings.json` and `.claude/settings.local.json`. Also grep `~/.claude/plugins/` for `hooks.json` — plugins register hooks that don't appear in settings files. For each plugin-registered hook, record whether the owning plugin is currently enabled — a disabled plugin's hooks never fire |
+| Hooks | `~/.claude/settings.json` + `~/.claude/settings.local.json` + each project's `.claude/settings.json` and `.claude/settings.local.json`. Also grep `~/.claude/plugins/` for `hooks.json` — plugins register hooks that don't appear in settings files. Also check `hooks:` blocks in skill and agent frontmatter — those fire only while that skill or agent is active. For each plugin-registered hook, record whether the owning plugin is currently enabled — a disabled plugin's hooks never fire |
 | Plugins | `~/.claude/plugins/` — check installed state (install records under `~/.claude/plugins/`), enabled state (`enabledPlugins` in settings files), and what each bundles |
 | MCP Servers | `~/.claude.json` (check all local-scoped entries and their project paths) + each project's `.mcp.json` |
 | Memory | `~/.claude/projects/*/memory/` for each project that has memory files — read MEMORY.md index + each memory file. Attribute each memory directory to its project via the path-encoded slug (see Scope) |
-| CLAUDE.md | `~/.claude/CLAUDE.md` + each project's `.claude/CLAUDE.md`. Break down by section — each heading-level block is a separate inventory item. Tag each item with its project |
+| CLAUDE.md | `~/.claude/CLAUDE.md` + each project's `CLAUDE.md`, `.claude/CLAUDE.md`, and `CLAUDE.local.md` (whichever exist). Break down by section — each heading-level block is a separate inventory item. Tag each item with its project |
 | Agents | `~/.claude/agents/` + each project's `.claude/agents/`. Read each definition's frontmatter + system prompt summary |
 
 ### Scanner Prompt
 
 The scanner prompt template (including the inventory format scanners must follow) is in `references/scanner-prompt.md`. Read it and pass it to each scanner with `[TYPE]`, the paths from the table above (including any scanner-specific instructions in the table row), and the resolved `<workspace>` path filled in.
 
-The **content character** field is what lets the reasoning agent spot misplacements. A memory file with "behavioral" character is probably a rule. An enforcement rule might be better as a hook or permission entry. A procedural CLAUDE.md section might be a skill.
+The **content character** field is what lets the reasoning agent spot misplacements. A memory file with "behavioral" character may be a rule. An enforcement rule might be better as a hook or permission entry. A procedural CLAUDE.md section might be a skill.
 
 ### Workspace
 
@@ -120,37 +113,5 @@ When the user selects findings:
 When `save <dir>` is used:
 
 1. Run the full audit
-2. Write to `<dir>/audit-config-YYYY-MM-DD.md` (append counter if name exists)
+2. Copy `<workspace>/findings.md` to `<dir>/audit-config-YYYY-MM-DD.md` (append counter if name exists)
 3. Confirm in chat: file path + finding counts per category
-
-### Note Format
-
-```markdown
-# Audit Config — YYYY-MM-DD
-
-Scanned: [list of config types and item counts]
-
-## Relocations
-
-### 1. [Title]
-- **Current:** ...
-- **Recommended:** ...
-- **Why:** ...
-- **Impact:** ...
-
-## Consolidations
-
-### N. [Title]
-...
-
-## Net-New
-
-### N. [Title]
-...
-
-## Correctly Placed
-
-Per config type, state what was examined and why it's correctly placed. For items that were tested against a boundary (behavioral CLAUDE.md sections, imperative-voice memory files, project-vs-global scoping), show the reasoning in one line — not just "all correct."
-
-Empty memory directories: note which projects have no memory files present.
-```

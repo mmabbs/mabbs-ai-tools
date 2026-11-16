@@ -14,6 +14,16 @@ The workflow:
 4. Presents findings in three categories — relocations, consolidations, net-new — plus a "Correctly Placed" section, so silence is never ambiguous.
 5. Executes only the findings you choose to act on. Originals are moved to an archive folder you choose, never deleted.
 
+## How it fits with `/doctor`
+
+Claude Code's built-in `/doctor` does some placement work, scoped to CLAUDE.md in the current project: it dedupes your personal CLAUDE.md against the project's, trims lines Claude could derive from the code, and moves task workflows out of CLAUDE.md into skills or subfolder CLAUDE.md files. `/doctor prompt-audit` flags instruction files that contradict each other. Run those first.
+
+audit-config covers what they don't:
+
+1. **All eight layers, not just CLAUDE.md.** A memory that should be a rule, a rule that should be a hook, a procedure that should be an agent, an MCP server in the wrong scope.
+2. **Across projects, not just the current one.** The same rule copied into three projects, a global rule only one project uses, memory files that disagree between projects.
+3. **Explicit boundary criteria.** Eight criteria docs you can read and edit, so the reasoning behind each verdict is visible.
+
 ## Sample output
 
 ```markdown
@@ -74,6 +84,7 @@ Restart Claude Code (or start a new session) and run `/audit-config`.
 1. **Project discovery.** The skill looks for a list of project directories in your CLAUDE.md (any table or list of project paths works). If you don't keep one, it asks which directories to scan — adding a small "Projects" table to your global CLAUDE.md makes full sweeps hands-free.
 2. **Boundary opinions.** The criteria docs encode opinionated defaults — notably "when the memory/rule boundary is fuzzy, resolve to memory." If you prefer more rules and less memory, edit `references/criteria-memory.md` — the reasoning prompt (`references/reasoning-prompt.md`) cites it rather than restating it, so one edit changes the policy.
 3. **Platform.** The findings file opens with `open` on macOS or `xdg-open` on Linux; on other platforms, substitute your default opener.
+4. **Reasoning effort.** The skill sets no effort level for the reasoning agent. To set one, pass an `effort` value where `SKILL.md` spawns it.
 
 ## Honest expectations
 
@@ -83,9 +94,9 @@ Findings quality depends on how much config you actually have — a fresh setup 
 
 | File | Purpose |
 | --- | --- |
-| `SKILL.md` | The skill: arguments, scan phases, workflow, output formats |
+| `SKILL.md` | The skill: arguments, scan phases, workflow |
 | `references/scanner-prompt.md` | Prompt template for the eight scanner agents, incl. inventory format |
-| `references/reasoning-prompt.md` | Prompt template for the reasoning agent, incl. boundary sweeps |
+| `references/reasoning-prompt.md` | Prompt template for the reasoning agent, incl. boundary sweeps and findings format |
 | `references/criteria-rules.md` | What belongs in rule files; boundaries vs. CLAUDE.md, memory, skills, hooks |
 | `references/criteria-skills.md` | What belongs in skills; boundaries vs. hooks, agents, rules, commands, memory |
 | `references/criteria-hooks.md` | What belongs in hooks; enforcement vs. guidance, intentional rule/hook stacking |
@@ -104,6 +115,17 @@ Findings quality depends on how much config you actually have — a fresh setup 
 - The docs now agree with the skill: findings open in a temporary file with a one-line summary in chat, and `save <dir>` keeps a copy.
 - Scanners and the reasoning agent run on your session model when Sonnet or Opus isn't available.
 - The install command uses the real repository URL.
+
+### 2026-10-05
+
+- Added "How it fits with `/doctor`": what the built-in `/doctor` and `/doctor prompt-audit` now cover, and where audit-config picks up.
+- CLAUDE.md scanner now reads each project's root `CLAUDE.md` and `CLAUDE.local.md`, not only `.claude/CLAUDE.md`. Hooks scanner now checks `hooks:` blocks in skill and agent frontmatter.
+- Scanners are told never to copy secrets (`env` values, headers, tokens) into their inventory files.
+- Findings always open as a file; the reasoning agent writes the final format directly, and save mode copies it.
+- Dropped "max effort" for the reasoning agent. See Adapting item 4 to set one.
+- The memory-vs-rule tie-breaker now lives only in `criteria-memory.md`, as Adapting item 2 promises.
+- Trimmed scripted progress messages and pressure wording from the prompts.
+- Criteria docs with version-specific facts are stamped with the Claude Code version they were checked against (2.1.289). Hook event count corrected to 33.
 
 ### 2026-07-19
 

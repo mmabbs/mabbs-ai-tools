@@ -1,5 +1,7 @@
 # Criteria: Plugins
 
+_Version-specific facts in this doc (limits, counts, defaults) were checked against Claude Code 2.1.289 docs and changelog on 2026-10-05._
+
 What makes something a plugin (`~/.claude/plugins/`, installed via marketplace or `claude plugin install`) rather than loose config files sitting in `skills/`, `agents/`, and settings.
 
 ## What Earns Its Keep

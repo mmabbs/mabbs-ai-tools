@@ -20,6 +20,7 @@ Scan [TYPE] configuration at the paths listed below. For each item, record five 
 Write the inventory to: `<workspace>/inventory-<type>.md`
 
 Do not assess whether items are misplaced. Do not recommend changes. Catalog accurately.
+Settings and MCP files can hold secrets. Record names, scopes, events, and commands, but never copy `env` values, headers, API keys, or tokens into the inventory.
 Note dead-weight items (empty files, no-op scripts, orphaned caches) in the inventory but tag them as `[dead-weight]` — audit-config does not act on these. Dead-weight cleanup is a separate maintenance concern, outside this skill's scope.
 
 Use this inventory format:

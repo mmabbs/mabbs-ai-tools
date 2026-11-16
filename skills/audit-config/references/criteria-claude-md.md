@@ -1,5 +1,7 @@
 # Criteria: CLAUDE.md
 
+_Version-specific facts in this doc (limits, counts, defaults) were checked against Claude Code 2.1.289 docs and changelog on 2026-10-05._
+
 What makes something CLAUDE.md content (`~/.claude/CLAUDE.md`, project `CLAUDE.md` / `.claude/CLAUDE.md`, `CLAUDE.local.md`) rather than a rule, a memory, a skill, or documentation.
 
 ## What Earns Its Keep

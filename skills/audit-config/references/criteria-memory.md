@@ -1,5 +1,7 @@
 # Criteria: Memory Files
 
+_Version-specific facts in this doc (limits, counts, defaults) were checked against Claude Code 2.1.289 docs and changelog on 2026-10-05._
+
 What makes something a memory file (`~/.claude/projects/<project>/memory/`) rather than a rule, CLAUDE.md content, or something that shouldn't be persisted at all.
 
 ## What Earns Its Keep
@@ -39,7 +41,7 @@ These are things that *look* like memories but shouldn't be stored as such. If a
 
 A memory that starts with "Don't...", "Always...", or "When X, do Y" is almost certainly a rule. Memory files should inform Claude's judgment — not direct it with imperative instructions.
 
-However: Claude has poor agentic steering on what should be a memory vs. a rule, and this skill defaults to fewer rules rather than more. The reasoning agent should have a **high bar** for recommending something move from memory to rule. Only recommend it when the instruction is genuinely behavioral and session-independent — something Claude must do the same way every time regardless of context.
+This skill defaults to fewer rules rather than more. The reasoning agent should have a **high bar** for recommending something move from memory to rule. Only recommend it when the instruction is genuinely behavioral and session-independent — something Claude must do the same way every time regardless of context.
 
 If the boundary is fuzzy, prefer memory. A misplaced memory is low-cost (Claude reads it and applies judgment). A misplaced rule adds to the instruction surface Claude must obey, and rules accumulate faster than they get cleaned up.
 
@@ -67,4 +69,4 @@ Memory records are claims about what was true *when written*. Before acting on a
 
 ## Index Discipline
 
-`MEMORY.md` is an index, not a memory. Each entry is one line under ~150 characters. The content lives in the individual memory files. Lines after 200 in MEMORY.md are truncated from context, so the index must stay concise.
+`MEMORY.md` is an index, not a memory. Each entry is one line under ~150 characters. The content lives in the individual memory files. Lines after 200 (or past 25KB) in MEMORY.md are truncated from context, so the index must stay concise.

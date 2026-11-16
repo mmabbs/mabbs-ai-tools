@@ -31,7 +31,7 @@ Unscoped rules and CLAUDE.md both load fully at startup — the mechanical diffe
 
 ### Rule vs. Memory
 
-**Rules prescribe behavior. Memories describe context.** Imperative voice ("Don't...", "Always...") signals rule; declarative facts about the user, projects, or resources signal memory. When fuzzy, prefer memory — a misplaced memory is low-cost (Claude applies judgment), while a misplaced rule adds to the instruction surface Claude must obey, and rules accumulate faster than they get cleaned up. Graduate a memory to a rule only when the instruction is genuinely behavioral and session-independent — something Claude must do the same way every time.
+**Rules prescribe behavior. Memories describe context.** Imperative voice ("Don't...", "Always...") signals rule; declarative facts about the user, projects, or resources signal memory. For fuzzy cases, apply the tie-breaker in criteria-memory.md ("Memory vs. Rule") — it holds the policy and its reasons.
 
 ### Rule vs. Skill
 

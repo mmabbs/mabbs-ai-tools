@@ -1,5 +1,7 @@
 # Criteria: Skills
 
+_Version-specific facts in this doc (limits, counts, defaults) were checked against Claude Code 2.1.289 docs and changelog on 2026-10-05._
+
 What makes something a skill (`~/.claude/skills/<name>/SKILL.md`, `.claude/skills/`) rather than a rule, a hook, an agent definition, or just a good prompt.
 
 ## What Earns Its Keep
