@@ -4,7 +4,6 @@ description: "Ready a personal Claude Code skill for public GitHub release. Use 
 when_to_use: "The user wants to share a skill outside their own setup, or remove personal data from a skill before others see it."
 argument-hint: <path-to-skill-folder>
 disable-model-invocation: true
-effort: high
 ---
 
 # Sanitize Release

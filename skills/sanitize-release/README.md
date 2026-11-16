@@ -37,8 +37,8 @@ Errors: 4   Warnings: 2
     subagent_type: "daily-brief--summarizer"
 [warning] SKILL.md:30  mcp_tool_ref: mcp__notes__write_note
     Write the brief with mcp__notes__write_note.
-[warning] SKILL.md:52  model_pin: claude-sonnet-4-5
-    Summaries run on claude-sonnet-4-5.
+[warning] SKILL.md:52  model_pin: claude-sonnet-5-5
+    Summaries run on claude-sonnet-5-5.
 
 == binaries (a scan cannot read these; open each one)
   assets/example-output.png
@@ -70,8 +70,6 @@ staging/daily-brief/
 | Git | Required | No commit email check or commit offer |
 | A staging directory and a local git repo | Required | Nowhere to write the sanitized copy or publish it — configure in `repo-conventions.md` |
 | Claude Code's bundled `claude-api` skill | Optional | The Stage 8 prompt audit falls back to `/doctor prompt-audit`; sanitization itself is unaffected |
-
-The skill runs at `effort: high`, so a full run uses more tokens than a default session.
 
 ## Installation
 
@@ -136,6 +134,11 @@ Write each term so it matches every spelling: `[\s_\-.]*` between words catches 
 The secret patterns and the private-terms file format follow [sanitize-public](https://github.com/imisic/claude-marketplace/tree/main/plugins/sanitize-public), so one private-terms file serves both. Use sanitize-public for a general leak gate on any repo, including its git history. Use this skill to turn a personal skill into a public one.
 
 ## Changelog
+
+### 2026-11-16
+
+- Removed `effort: high` from the skill. It runs at your session's effort level.
+- The README's sample scanner output uses a current model ID.
 
 ### 2026-11-15
 
