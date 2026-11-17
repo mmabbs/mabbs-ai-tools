@@ -1,21 +1,9 @@
 # mabbs-ai-tools
-A small collection of skills and plugins I use in my own Claude workflows, cleaned up so anyone can install them. Each tool is a self-contained folder. Most are skills you copy into a skills directory; `check-cc-health` installs as a plugin, and `audit-research-desktop` uploads to claude.ai/Desktop as a ZIP. No build step.
+A small collection of skills and plugins I use in my own Claude workflows, cleaned up so anyone can install them. Each tool is a self-contained folder. Most are skills you copy into a skills directory; `check-cc-health` installs as a plugin. No build step.
 
 New to Claude skills? Check out [Anthropic's docs on Claude Skills](https://code.claude.com/docs/en/skills)
 
 ## Tools
-
-### Thinking
-
-| Tool                     | What it does                                                                                                                                | Notes         |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| [ideate](tools/ideate/) | 16 structured thinking modes (collision, inversion, first-principles, steelmanning, and more) for working a stuck problem from a new angle. | Requires Opus |
-
-### Research
-
-| Tool                                                         | What it does                                                                                                                                                                                  | Notes                                        |
-| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| [audit-research-desktop](tools/audit-research-desktop/) | Audits citation integrity in research documents: verifies each cited source is real and reachable, checks whether sources say what the document claims, and grades on two axes (link integrity, claim accuracy). | claude.ai/Desktop upload · needs web access |
 
 ### Skill development
 
@@ -45,7 +33,7 @@ Each tool is one folder. For a skill, clone the repo and copy the folder you wan
 
 ```bash
 git clone --depth 1 https://github.com/<user>/<repo>.git
-cp -r <repo>/tools/ideate ~/.claude/skills/
+cp -r <repo>/tools/audit-config ~/.claude/skills/
 ```
 
 - `~/.claude/skills/` installs a skill for every project. A project's own `.claude/skills/` scopes it to that repo.
@@ -53,7 +41,7 @@ cp -r <repo>/tools/ideate ~/.claude/skills/
 - Want one skill without cloning the whole repo? Use GitHub's "download folder" option, or [`degit`](https://github.com/Rich-Harris/degit) (requires Node 20+):
 
   ```bash
-  degit <user>/<repo>/tools/ideate ~/.claude/skills/ideate
+  degit <user>/<repo>/tools/audit-config ~/.claude/skills/audit-config
   ```
 
 Replace `<user>/<repo>` with this repository's path.
@@ -67,8 +55,6 @@ Some tools assume a particular environment. Each tool's own `README.md` document
 - **Bundled scripts** — `find-events` includes a cron wrapper shell script that expects `claude` on your PATH.
 - **Plugin install** — `check-cc-health` is a plugin, not a standalone skill. It requires the local plugin install flow (`claude plugin marketplace add` + `claude plugin install`). See its README for the full steps.
 - **Subagent-heavy** — `audit-config` spawns eight parallel scanner agents plus one reasoning agent per run. It targets Sonnet for scanning and Opus for the cross-layer reasoning; without those models it falls back to your session model.
-- **Desktop upload** — `audit-research-desktop` is for claude.ai / Claude Desktop, not Claude Code: don't copy it into `~/.claude/skills/`. Rename the folder to `audit-research` and upload it as a ZIP via Settings → Capabilities → Skills — its README has the exact packaging steps.
-- **Model requirements** — `ideate` requires Opus. Its frameworks are reasoning-intensive; lower-tier models produce shallow output that defeats the purpose. Solo modes technically function on Sonnet but with degraded quality; combinations and agent pipelines require Opus. Fable is also recommended; it ideates differently from Opus.
 
 ## Maintenance and contributions
 
