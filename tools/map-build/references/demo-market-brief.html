@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Morning Market Brief</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dagre/0.8.5/dagre.min.js"></script>
+<style>
+:root {
+  --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --bg: #f4f4f6; --surface: #ffffff; --ink: #18181f; --muted: #5b5b68; --line: #dcdce3;
+  --edge: #23232b; --past-fill: #e7e7ec; --past-ink: #a0a0ab; --past-edge: #c9c9d1; --fail: #d92d20;
+  --node-ink: #14141a;
+  /* Color = the node's job in the flow. Never reused for anything else. */
+  --r-trigger: #2cc4dc; --r-coordinator: #4f8dfd; --r-worker: #4ccf7a; --r-checker: #f7bd35;
+  --r-merge: #a78bfa; --r-human: #f27ab6; --r-store: #c9a27a;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15151a; --surface: #1e1e25; --ink: #ececf2; --muted: #a3a3b0; --line: #30303a;
+    --edge: #d4d4dc; --past-fill: #2a2a32; --past-ink: #6f6f7c; --past-edge: #45454f; --fail: #ff6a5c;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15151a; --surface: #1e1e25; --ink: #ececf2; --muted: #a3a3b0; --line: #30303a;
+  --edge: #d4d4dc; --past-fill: #2a2a32; --past-ink: #6f6f7c; --past-edge: #45454f; --fail: #ff6a5c;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.5 var(--font); }
+header { padding: 22px 20px 6px; text-align: center; }
+h1 { margin: 0; font-size: 26px; letter-spacing: -0.01em; }
+header p { margin: 4px 0 0; color: var(--muted); }
+
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px 22px; justify-content: center; padding: 12px 20px 6px; }
+.tgroup { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.glabel { font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-right: 2px; }
+button.btn { font: 500 13px var(--font); color: var(--ink); background: var(--surface); border: 1px solid var(--line);
+  border-radius: 8px; padding: 5px 10px; cursor: pointer; }
+button.btn:hover:not(:disabled) { border-color: var(--muted); }
+button.btn:disabled { opacity: .4; cursor: default; }
+button.btn.on, button.btn[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.seg { display: inline-flex; }
+.seg .btn { border-radius: 0; }
+.seg .btn:first-child { border-radius: 8px 0 0 8px; }
+.seg .btn:last-child { border-radius: 0 8px 8px 0; margin-left: -1px; }
+.counter { font-variant-numeric: tabular-nums; font-weight: 600; min-width: 86px; text-align: center; }
+label.chk { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; cursor: pointer; }
+
+.tabs { display: flex; gap: 4px; position: sticky; top: 0; z-index: 2; background: var(--bg); padding-bottom: 8px; }
+.tab { flex: 1; font: 600 13px var(--font); color: var(--muted); background: transparent; border: 1px solid var(--line);
+  border-radius: 8px; padding: 6px 8px; cursor: pointer; }
+.tab.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.legend-body { display: grid; grid-template-columns: 1fr; gap: 16px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+.legend-body h3 { margin: 0 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+.legend-body p.def { margin: 0 0 6px; font-size: 13px; }
+.lrow { display: flex; align-items: center; gap: 10px; font-size: 13px; margin: 4px 0; }
+.lrow svg { flex: none; }
+.lrow b { font-weight: 650; }
+.rrow { font-size: 13px; margin: 0 0 6px; padding: 3px 6px; border-radius: 8px; cursor: default; }
+.rrow:hover { background: color-mix(in srgb, var(--ink) 6%, transparent); }
+.rrow .rn { color: var(--muted); }
+.rrow .none { color: var(--muted); font-style: italic; }
+
+main { display: grid; grid-template-columns: minmax(0, 1fr) 390px; gap: 16px; padding: 12px 20px 28px; align-items: start; }
+main.nopanel { grid-template-columns: minmax(0, 1fr); }
+main.nopanel #panel { display: none; }
+@media (max-width: 960px) { main { grid-template-columns: minmax(0, 1fr); } }
+#stage { background: var(--bg); border: 1px solid var(--line); border-radius: 14px; overflow: auto; }
+#svg { display: block; height: auto; margin: 0 auto; }
+#panel { position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow: auto; padding-right: 2px; }
+
+.caption { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-bottom: 4px; }
+.cap-k { font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+.cap-t { font-size: 16px; font-weight: 700; margin: 2px 0 4px; }
+.caption p { margin: 0; font-size: 13.5px; }
+.cap-why { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 5px; }
+.rchip { display: inline-block; font-size: 12px; font-weight: 550; padding: 1px 8px; border: 1px solid var(--line);
+  border-radius: 10px; background: var(--surface); white-space: nowrap; }
+.rchip .rl { color: var(--muted); font-weight: 500; }
+.stepdiv { font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: .07em; color: var(--muted);
+  margin: 14px 2px 6px; display: flex; gap: 8px; align-items: center; }
+.stepdiv::after { content: ""; flex: 1; border-top: 1px solid var(--line); }
+
+.card { background: color-mix(in srgb, var(--c) 11%, var(--surface)); border-left: 4px solid var(--c);
+  border-radius: 10px; margin-bottom: 8px; transition: box-shadow .15s; }
+.card.hi { box-shadow: 0 0 0 2px var(--c); }
+.card.edgecard { --c: var(--ink); background: color-mix(in srgb, var(--ink) 5%, var(--surface)); }
+.card.edgecard.failcard { --c: var(--fail); background: color-mix(in srgb, var(--fail) 8%, var(--surface)); }
+.card.ghostcard { --c: var(--past-ink); background: var(--surface); opacity: .85; }
+.card-head { all: unset; box-sizing: border-box; display: flex; gap: 10px; align-items: flex-start; width: 100%; padding: 10px 12px; cursor: pointer; }
+.card-head:focus-visible { outline: 2px solid var(--c); outline-offset: -2px; border-radius: 8px; }
+.badge { flex: none; min-width: 24px; height: 24px; border-radius: 12px; background: var(--c); color: var(--node-ink);
+  font: 700 12px/24px var(--font); text-align: center; padding: 0 5px; margin-top: 2px; }
+.edgecard .badge { color: var(--bg); }
+.failcard .badge { color: #fff; }
+.ghostcard .badge { background: var(--past-fill); color: var(--past-ink); }
+.chd { flex: 1; min-width: 0; }
+.ck { display: block; font-size: 10.5px; font-weight: 650; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+.ct { display: block; font-weight: 650; font-size: 14px; }
+.kind { font-size: 11.5px; font-weight: 600; color: var(--muted); border: 1px solid var(--line); background: var(--surface);
+  border-radius: 6px; padding: 0 6px; margin-left: 6px; vertical-align: 1px; }
+.chl { display: block; font-size: 13px; color: var(--muted); margin-top: 1px; }
+.chev { flex: none; color: var(--muted); transition: transform .15s; margin-top: 2px; }
+.card.open .chev { transform: rotate(90deg); }
+.card-body { display: none; padding: 0 14px 12px 46px; font-size: 13.5px; }
+.card.open .card-body { display: block; }
+.card-body h4 { margin: 10px 0 2px; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.card-body p { margin: 0 0 4px; }
+.card-body table { border-collapse: collapse; width: 100%; margin: 6px 0; font-size: 12.5px; }
+.card-body th, .card-body td { text-align: left; padding: 4px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.card-body th { font-weight: 650; color: var(--muted); }
+.term { font-weight: 650; border-bottom: 1px dotted currentColor; cursor: help; }
+.ref { font-weight: 650; background: color-mix(in srgb, var(--ink) 8%, transparent); border-radius: 5px; padding: 0 4px; cursor: default; white-space: nowrap; }
+#tip { position: fixed; z-index: 10; max-width: 280px; background: var(--ink); color: var(--bg); font-size: 12.5px; line-height: 1.45;
+  padding: 8px 10px; border-radius: 8px; pointer-events: none; opacity: 0; transition: opacity .12s; }
+#tip.show { opacity: 1; }
+
+/* Diagram */
+.node { cursor: pointer; transition: opacity .15s; }
+.node:focus { outline: none; }
+.node .shape { fill: var(--c); stroke: color-mix(in srgb, var(--c) 55%, #000); stroke-width: 1.2; }
+.node.current .shape { stroke-width: 2.2; }
+.node .stack { opacity: .5; }
+.node .rim { fill: none; stroke: color-mix(in srgb, var(--c) 55%, #000); stroke-width: 1.2; }
+.node.external .shape { stroke: var(--ink); stroke-width: 1.8; stroke-dasharray: 7 4; }
+.node .t1 { font: 650 13.5px var(--font); fill: var(--node-ink); }
+.node .t2 { font: 400 11px var(--font); fill: var(--node-ink); opacity: .78; }
+.node .badge-c { fill: var(--c); stroke: var(--bg); stroke-width: 2.5; }
+.node .badge-t { font: 700 11px var(--font); fill: var(--node-ink); }
+.node .tag-r, .node .why-r { fill: var(--surface); stroke: color-mix(in srgb, var(--c) 55%, #000); }
+.node .tag-t, .node .why-t { font: 650 10.5px var(--font); fill: var(--ink); }
+.node.past .shape, .node.past .badge-c { fill: var(--past-fill); stroke: var(--past-edge); }
+.node.past .rim, .node.past .tag-r, .node.past .why-r { stroke: var(--past-edge); }
+.node.past text { fill: var(--past-ink); opacity: 1; }
+.node.past.external .shape { stroke: var(--past-ink); }
+.node.ghost .shape, .node.ghost .stack { fill: transparent; stroke: var(--past-ink); stroke-width: 1.4; }
+.node.ghost text { fill: var(--past-ink); opacity: 1; }
+.node.ghost .badge-c { fill: var(--past-fill); stroke: var(--bg); }
+.node.ghost .tag-r { stroke: var(--past-ink); }
+.node.groupnode .shape { fill: var(--surface); stroke: var(--muted); stroke-width: 1.4; }
+.node.groupnode .inner { fill: none; stroke: var(--muted); stroke-width: 1; }
+.node.groupnode text { fill: var(--ink); }
+.node.groupnode.past .shape { fill: var(--past-fill); }
+.node.hidden, .edge.hidden, .cluster.hidden { display: none; }
+
+.edge { transition: opacity .15s; }
+.edge .ln { fill: none; stroke: var(--edge); stroke-width: 1.8; }
+.edge .hit { fill: none; stroke: transparent; stroke-width: 14; cursor: pointer; }
+.edge.dashed .ln { stroke-dasharray: 7 5; }
+.edge.dotted .ln { stroke-dasharray: 0.5 5.5; stroke-linecap: round; stroke-width: 2.6; }
+.edge.fail .ln { stroke: var(--fail); }
+.edge.past .ln { stroke: var(--past-edge); }
+.edge.ghost .ln { stroke: var(--past-ink); opacity: .6; }
+.edge .lbl-bg { fill: var(--bg); stroke: var(--line); }
+.edge .lbl { font: italic 11.5px var(--font); fill: var(--muted); }
+.edge.fail .lbl { fill: var(--fail); }
+.edge.past .lbl { fill: var(--past-ink); }
+.edge .lt-c { fill: var(--ink); }
+.edge .lt { font: 700 10.5px var(--font); fill: var(--bg); }
+.edge.fail .lt-c { fill: var(--fail); }
+.edge.fail .lt { fill: #fff; }
+.edge.past .lt-c { fill: var(--past-ink); }
+#m-ink path { fill: var(--edge); } #m-past path { fill: var(--past-edge); }
+#m-fail path { fill: var(--fail); } #m-ghost path { fill: var(--past-ink); }
+.cluster .box { fill: color-mix(in srgb, var(--ink) 3%, transparent); stroke: var(--line); stroke-width: 1.2; }
+.cluster .cl-l { font: 650 11.5px var(--font); fill: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+.cluster .cl-b { font: 600 12px var(--font); fill: var(--ink); cursor: pointer; text-decoration: underline; }
+svg.dim .node:not(.hi), svg.dim .edge:not(.hi), svg.dim .cluster { opacity: .16; }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title"></h1>
+  <p id="subtitle"></p>
+</header>
+
+<div class="toolbar">
+  <div class="tgroup">
+    <span class="glabel">Steps</span>
+    <div class="seg" id="orderSeg">
+      <button class="btn" data-order="run">How it runs</button>
+      <button class="btn" data-order="build">How we built it</button>
+    </div>
+    <button class="btn" id="prev" aria-label="Previous step">◀ Back</button>
+    <span class="counter" id="counter"></span>
+    <button class="btn" id="next" aria-label="Next step">Next ▶</button>
+    <button class="btn" id="revealAll">Reveal all</button>
+    <button class="btn" id="revealAllCollapsed">Reveal all, collapsed</button>
+  </div>
+  <div class="tgroup">
+    <span class="glabel">Explainers</span>
+    <button class="btn" id="expandAll">Expand all</button>
+    <button class="btn" id="collapseAll">Collapse all</button>
+    <button class="btn" id="hidePanel" aria-pressed="false">Hide</button>
+  </div>
+  <div class="tgroup">
+    <span class="glabel">View</span>
+    <label class="chk"><input type="checkbox" id="hideData"> Hide data</label>
+    <label class="chk"><input type="checkbox" id="hideFail"> Hide failures</label>
+    <label class="chk"><input type="checkbox" id="showCuts"> Show what we cut</label>
+  </div>
+</div>
+
+
+<main id="main">
+  <section id="stage"><svg id="svg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Graph diagram"></svg></section>
+  <aside id="panel">
+    <div class="tabs" role="tablist">
+      <button class="tab" data-tab="cards" role="tab">Explainers</button>
+      <button class="tab" data-tab="howto" role="tab">How to read this graph</button>
+    </div>
+    <div id="tabCards"><div id="caption"></div><div id="cards"></div></div>
+    <div id="tabHowto" hidden><div class="legend-body" id="legendBody"></div></div>
+  </aside>
+</main>
+<div id="tip" role="tooltip"></div>
+
+<script>
+/* ==========================================================================
+   GRAPH DATA. This block is the only part the /map-build skill writes.
+   scripts/graph_page.py swaps everything between the GRAPH-DATA markers.
+   Everything below it is the fixed template.
+   Text can use {term} for glossary pop-ups, {@edgeId} to name an edge, and
+   {#nodeId} to name a node. Numbers and letters are filled in from the step order.
+   ========================================================================== */
+/* GRAPH-DATA-START */
+const GRAPH = {
+  title: "Morning Market Brief",
+  subtitle: "A researched, fact-checked brief every morning. Sample graph for /map-build.",
+
+  roles: {
+    trigger:     { name: "Trigger",     desc: "starts things" },
+    coordinator: { name: "Coordinator", desc: "decides where work goes" },
+    worker:      { name: "Worker",      desc: "does the main work" },
+    checker:     { name: "Checker",     desc: "verifies another node's work" },
+    merge:       { name: "Merge",       desc: "joins parallel results into one" },
+    human:       { name: "Human",       desc: "a person decides or acts" },
+    store:       { name: "Store",       desc: "where data lives or comes from" }
+  },
+
+  reasons: {
+    1: { name: "Distinct specialty",       desc: "The job needs its own instructions, context, and limits." },
+    2: { name: "Parallel fan-out",         desc: "Several copies run at once, then join back up." },
+    3: { name: "Different model or tools", desc: "It needs a different model, or a different set of tools, from its neighbors." },
+    4: { name: "Auditable routing",        desc: "You must be able to show why work took one path over another." },
+    5: { name: "Overloaded checker",       desc: "One check was judging too many things, so checking split off." }
+  },
+
+  groups: [ { id: "research", label: "Research stage" } ],
+
+  // build: model | code | store | event | person
+  // why.type: start (the loop it grew from) | earned (main reason, optional also) | required (the job can't run without it)
+  nodes: [
+    { id: "schedule", label: "Morning schedule", sub: "Schedule · daily 6:00 am", role: "trigger", build: "event", kind: "Event",
+      why: { type: "required", text: "Every graph needs something that starts it. Without this, nothing runs." },
+      card: {
+        headline: "Starts the run at 6:00 every morning.",
+        what: "A scheduled job fires once a day and hands the planner today's date. It's the only {trigger} in this graph.",
+        fail: "If the machine is asleep at 6:00, the run starts when it wakes, and the brief says it's late.",
+        rw: "Writes nothing. Starts the planner."
+      } },
+    { id: "planner", label: "Planner", sub: "Agent · Opus 5.5", role: "coordinator", build: "model", group: "research",
+      why: { type: "earned", main: 1, text: "Splitting the work well needs its own instructions, separate from researching or writing." },
+      card: {
+        headline: "Picks today's five sources and splits the work.",
+        what: "Reads the watch list and yesterday's brief, picks five sources worth checking, and gives each researcher one. This is the {coordinator} role.",
+        fail: "If it can't produce five assignments, the run stops and tells you, instead of researching nothing.",
+        rw: "Reads the watch list. Hands one assignment to each researcher."
+      } },
+    { id: "researcher", label: "Researcher", sub: "Agent · Sonnet 4.6", role: "worker", build: "model", count: 5, tag: "×5", group: "research",
+      why: { type: "earned", main: 2, text: "Reading five sources one after another was the slowest part of the morning. Five copies running at once removes the wait." },
+      card: {
+        headline: "Five copies run at once, one per source.",
+        what: "Each copy pulls articles from its source and writes short notes into its own slot in the {shared state}. Running all five together is a {fan-out}.",
+        fail: "If its source is down, it retries once, then writes a gap note instead ({@eSrc}). The other four carry on.",
+        rw: "Receives articles from the {#newsapi}. Writes its own notes slot in {#state}, and nothing else."
+      } },
+    { id: "newsapi", label: "News API", sub: "Third-party service", role: "store", build: "code", external: true, layer: "data",
+      why: { type: "required", text: "It's the raw material. Not a node you design, but one you depend on." },
+      card: {
+        headline: "The outside news service the researchers pull articles from.",
+        what: "A third-party API. The dashed outline means it's outside your control: it can change, slow down, or go offline.",
+        fail: "A source that's down becomes a noted gap, not a crash ({@eSrc}).",
+        rw: "Sends articles to the researchers."
+      } },
+    { id: "state", label: "Brief state", sub: "Shared state file", role: "store", build: "store", layer: "data",
+      why: { type: "required", text: "Work has to live somewhere between nodes. Shared state is that place, and every node hands work along through it." },
+      card: {
+        headline: "The shared file every node reads and writes, with one writer for each piece.",
+        what: "Holds the notes, the draft, the score, and your approval. This is the graph's {shared state}. Each piece has exactly one node allowed to write it:",
+        table: [
+          ["Source notes", "Each researcher, own slot only", "Synthesizer"],
+          ["Merged notes", "Synthesizer", "Writer, checker"],
+          ["Draft", "Writer", "Checker, you, publish"],
+          ["Score and comments", "Checker", "Score router, writer, you"],
+          ["Routing log", "Score router", "You"],
+          ["Approval or note", "You", "Publish, writer"]
+        ],
+        fail: "Saved after every step, so a crash mid-run picks up where it stopped.",
+        rw: "Dotted edges into this node show each write."
+      } },
+    { id: "synth", label: "Synthesizer", sub: "Agent · Sonnet 4.6", role: "merge", build: "model", group: "research",
+      why: { type: "earned", main: 2, text: "It's the other half of the fan-out. When five copies write in parallel, one node has to own the merge, or notes get overwritten and nobody notices." },
+      card: {
+        headline: "Joins five sets of notes into one.",
+        what: "Reads all five note slots and writes one merged set with the duplicates removed. This is the {fan-in}, also called a {reducer}.",
+        fail: "If fewer than three sources came back, it stops and flags the run as thin, instead of writing a weak brief.",
+        rw: "Reads the five note slots. Writes the merged notes."
+      } },
+    { id: "writer", label: "Writer", sub: "Agent · Opus 5.5", role: "worker", build: "model",
+      why: { type: "start", text: "The build started here: one agent in a {loop} doing everything. It kept the writing. The other jobs moved out as they earned their own nodes." },
+      card: {
+        headline: "Turns the merged notes into a draft brief.",
+        what: "Writes a one-page brief from the merged notes. When the draft comes back from the checker or from you, it fixes only the points raised.",
+        fail: "If it can't produce a draft, the run stops and you get the merged notes instead.",
+        rw: "Reads the merged notes and any comments. Writes the draft."
+      } },
+    { id: "checker", label: "Checker", sub: "Agent · Opus 4.6 · read-only", role: "checker", build: "model",
+      why: { type: "earned", main: 5, also: [3], text: "Main reason: the writer grading its own facts kept missing errors, so checking split off into its own node. Also: running it on a different model from the writer means it doesn't share the writer's blind spots." },
+      card: {
+        headline: "Scores the draft on a different model, and can't edit it.",
+        what: "Checks every claim against the notes and scores the draft out of 10. It's {read-only}: it can judge the draft but never change it.",
+        fail: "If it errors out, the draft goes to you marked \"unchecked.\" It never ships as if it had passed.",
+        rw: "Reads the draft and the merged notes. Writes the score and comments."
+      } },
+    { id: "router", label: "Score router", sub: "Script · plain rules", role: "coordinator", build: "code",
+      why: { type: "earned", main: 4, text: "If the checker decided where the draft goes, the choice would be buried in an agent's reasoning. As a plain rule that logs every decision, you can always see why a draft went back, went on, or got flagged." },
+      card: {
+        headline: "Applies the score rules and logs every decision.",
+        what: "Reads the checker's score and the round count, then picks one path: back to the writer ({@eLoop}), on to you, or on to you flagged after two failed rounds. It's a {coordinator} written as code, with no model.",
+        fail: "If the score is missing or unreadable, it sends the draft to you marked \"unchecked\" instead of guessing.",
+        rw: "Reads the score and round count. Writes each routing decision to the log in {#state}."
+      } },
+    { id: "you", label: "You", sub: "Approve or send back", role: "human", build: "person", kind: "Person",
+      why: { type: "required", text: "The brief goes out under your name, so a person makes the final call. This is a {human gate}." },
+      card: {
+        headline: "You approve the brief or send it back.",
+        what: "You read the draft and the checker's score. Approve it and it publishes. Send it back with a note and the writer revises.",
+        fail: "If you haven't responded by 9:00, nothing publishes. The draft waits for you.",
+        rw: "Reads the draft and score. Writes the approval or a note."
+      } },
+    { id: "publish", label: "Publish", sub: "Script", role: "worker", build: "code",
+      why: { type: "earned", main: 3, text: "Posting needs inbox access that no other node should have. It also doesn't need a model: fixed, predictable steps are cheaper and safer as code." },
+      card: {
+        headline: "A plain script posts the approved brief.",
+        what: "Formats the brief and posts it to your inbox. No model involved.",
+        fail: "If posting fails, it retries once, then alerts you.",
+        rw: "Reads the approved draft. Writes nothing back."
+      } },
+    { id: "summarizer", label: "Summarizer", sub: "Agent · one per source", role: "worker", build: "model", ghost: true, tag: "cut", group: "research",
+      card: { headline: "Considered and cut.",
+        cut: "The researchers already summarize their own source. A separate node added a hand-off and couldn't name one of the five reasons." } },
+    { id: "formatter", label: "Formatter", sub: "Agent", role: "worker", build: "model", ghost: true, tag: "cut",
+      card: { headline: "Considered and cut.",
+        cut: "Formatting is fixed and predictable, so the publish script does it. \"Does this need a model?\" No." } }
+  ],
+
+  // style: solid (always) | dashed (only sometimes) | dotted (data moving; the arrow points the way it travels)
+  // layer: flow | data | fail. Edges with a card get a letter, in the order they appear.
+  edges: [
+    { id: "e1", from: "schedule", to: "planner", style: "solid", label: "6:00 am" },
+    { id: "eFan", from: "planner", to: "researcher", style: "solid", label: "fan-out ×5", kind: "Fan-out",
+      card: { headline: "One planner hands work to five researchers at once.",
+              text: "A {fan-out}: one step splits into parallel copies. Each copy gets a different source, so none of them wait on the others." } },
+    { id: "eSrc", from: "newsapi", to: "researcher", style: "dashed", layer: "fail", label: "source down: retry, then note the gap", kind: "Failure path",
+      card: { headline: "A source is down: retry once, then note the gap.",
+              text: "A {failure path}. The researcher for that source retries once. If it's still down, the researcher writes a gap note instead of notes, and the other four carry on. The brief says one source was missing. This is {failure isolation}." } },
+    { id: "e2", from: "researcher", to: "synth", style: "solid", label: "fan-in" },
+    { id: "e3", from: "synth", to: "writer", style: "solid", label: "merged notes" },
+    { id: "e4", from: "writer", to: "checker", style: "solid", label: "draft" },
+    { id: "e6", from: "checker", to: "router", style: "solid", label: "score" },
+    { id: "eLoop", from: "router", to: "writer", style: "dashed", label: "score below 8 · max 2 rounds", kind: "Conditional · loop-back",
+      card: { headline: "Score below 8: back to the writer, at most twice.",
+              text: "A {conditional edge} that points backward, which makes it a {loop-back}. \"Max 2 rounds\" is the {stop condition}. Without it, a picky checker and a stubborn writer could loop forever." } },
+    { id: "ePass", from: "router", to: "you", style: "dashed", label: "score 8 or higher", kind: "Conditional",
+      card: { headline: "Score 8 or higher: on to you.",
+              text: "The other branch of the same condition as {@eLoop}. Every {conditional edge} needs a stated rule for each way it can go." } },
+    { id: "eFlag", from: "router", to: "you", style: "dashed", layer: "fail", label: "still below 8 after 2 rounds: flagged", kind: "Failure path",
+      card: { headline: "Still below 8 after two rounds: sent to you, flagged.",
+              text: "The way out of {@eLoop}. When the {stop condition} hits, the work goes to a person instead of being dropped or shipped." } },
+    { id: "eBack", from: "you", to: "writer", style: "dashed", label: "send back with a note", kind: "Conditional · loop-back",
+      card: { headline: "You send it back, and the writer revises using your note.",
+              text: "A second {loop-back}, this one decided by a person. It doesn't count against the checker's two rounds." } },
+    { id: "e5", from: "you", to: "publish", style: "dashed", label: "if approved" },
+    { id: "d1", from: "newsapi", to: "researcher", style: "dotted", layer: "data", label: "articles" },
+    { id: "d2", from: "researcher", to: "state", style: "dotted", layer: "data", label: "notes, own slot" },
+    { id: "d3", from: "synth", to: "state", style: "dotted", layer: "data", label: "merged notes" },
+    { id: "d4", from: "writer", to: "state", style: "dotted", layer: "data", label: "draft" },
+    { id: "d5", from: "checker", to: "state", style: "dotted", layer: "data", label: "score" },
+    { id: "d6", from: "router", to: "state", style: "dotted", layer: "data", label: "routing log" },
+    { id: "g1", from: "researcher", to: "summarizer", style: "solid", ghost: true },
+    { id: "g2", from: "summarizer", to: "synth", style: "solid", ghost: true },
+    { id: "g3", from: "you", to: "formatter", style: "solid", ghost: true },
+    { id: "g4", from: "formatter", to: "publish", style: "solid", ghost: true },
+    // Shown only in "How we built it", before the real connections existed.
+    { id: "t1", from: "schedule", to: "writer", style: "solid", buildOnly: true, until: 2, label: "one loop did everything" },
+    { id: "t2", from: "researcher", to: "writer", style: "solid", buildOnly: true, until: 3, label: "notes, no merge yet" },
+    { id: "t3", from: "checker", to: "writer", style: "dashed", buildOnly: true, until: 4, label: "checker decides: try again" }
+  ],
+
+  steps: {
+    run: [
+      { nodes: ["schedule"], title: "The trigger fires",
+        text: "At 6:00 every morning a schedule starts the run. This is the graph's only {trigger}. Nothing happens until it fires." },
+      { nodes: ["planner"], title: "The planner splits the work",
+        text: "The planner picks five sources worth checking today and gives each researcher one. It's a {coordinator}: its job is deciding where work goes." },
+      { nodes: ["researcher", "newsapi", "state"], title: "Five researchers run at once",
+        text: "One researcher per source, all at the same time: a {fan-out}. Each pulls articles from the news API and writes notes into its own slot in the {shared state}." },
+      { nodes: ["synth", "summarizer"], title: "The notes get merged",
+        text: "The synthesizer joins five sets of notes into one: the {fan-in}. One node owns the merge, so no notes get overwritten." },
+      { nodes: ["writer"], title: "The writer drafts",
+        text: "The writer turns the merged notes into a one-page brief." },
+      { nodes: ["checker"], title: "A separate checker scores it",
+        text: "A {checker} on a different model scores the draft out of 10. It only judges. It doesn't decide where the draft goes next." },
+      { nodes: ["router"], title: "A plain rule routes the draft",
+        text: "The score router applies fixed rules: below 8 goes back to the writer, at most twice, and 8 or higher goes on to you. The two-round limit is the {stop condition}. Every decision is logged." },
+      { nodes: ["you"], title: "You decide",
+        text: "You read the draft and its score, then approve it or send it back. This is a {human gate}." },
+      { nodes: ["publish", "formatter"], title: "A script publishes",
+        text: "A plain script posts the approved brief. Posting is fixed and predictable, so it doesn't need a model." }
+    ],
+    build: [
+      { nodes: ["schedule", "writer"], title: "Start as one loop",
+        text: "The job began as one agent in a {loop}: research, write, check its own work, repeat. Every node added after this had to earn its place against that." },
+      { nodes: ["checker"], title: "Split off the checker",
+        text: "The writer grading its own facts kept missing errors. A separate checker, on a different model and {read-only}, became the first new node." },
+      { nodes: ["researcher", "newsapi", "state"], title: "Fan out the research",
+        text: "Reading five sources one after another was the slowest part of the morning. Five researchers now run in parallel: a {fan-out}." },
+      { nodes: ["planner"], title: "Add a planner",
+        text: "Five parallel researchers need someone to split the work well. That's a distinct job with its own instructions, so it became a {coordinator}." },
+      { nodes: ["synth", "summarizer"], title: "Add the merge",
+        text: "Five researchers writing to one file need one owner for the merge, or notes get overwritten. The synthesizer is the {fan-in}. A per-source summarizer was considered and cut." },
+      { nodes: ["router"], title: "Make the routing auditable",
+        text: "Until now the checker decided on its own whether to send the draft back. Moving that choice into a plain rule that logs every decision means you can always see why a draft took the path it did." },
+      { nodes: ["you", "publish", "formatter"], title: "Add your approval and a script",
+        text: "You approve before anything ships: a {human gate}. Publishing doesn't need a model, so it's a script. A formatter agent was cut for the same reason." }
+    ]
+  },
+
+  glossary: {
+    "graph": "The whole system drawn as nodes connected by edges.",
+    "node": "One working part of the graph: an agent, a script, stored data, a person, or an event.",
+    "edge": "A connection between two nodes. The arrow shows which way work or data moves.",
+    "trigger": "What starts a node or a whole run: a schedule, a button press, an incoming message, a game event.",
+    "coordinator": "A node whose job is deciding where work goes next. Planners, routers, and orchestrators are all coordinators.",
+    "fan-out": "One step splits into several copies that run at the same time.",
+    "fan-in": "Several parallel results join back into one.",
+    "reducer": "The node, or rule, that merges several writes into one result so none get lost.",
+    "loop": "One agent repeating a cycle (plan, act, check) until a stop condition is met. The smallest possible graph: one node with an edge back to itself.",
+    "read-only": "Can look at files or data but can't change them.",
+    "checker": "A node whose only job is judging another node's work. Also called a verifier or reviewer.",
+    "human gate": "A point where a person has to decide before the graph continues.",
+    "shared state": "The data every node reads from and writes to as work moves through the graph.",
+    "conditional edge": "An edge that's only followed when a rule is true, like \"if the score is below 8.\"",
+    "loop-back": "An edge that points backward, sending work to an earlier node to try again.",
+    "stop condition": "The rule that ends a loop, like \"max 2 rounds.\" Without one, a loop can run forever.",
+    "failure path": "Where work goes when something fails, instead of crashing the whole run.",
+    "failure isolation": "Designing the graph so one node's failure doesn't break or poison the others."
+  }
+};
+/* GRAPH-DATA-END */
+
+/* ==========================================================================
+   TEMPLATE
+   ========================================================================== */
+const NS = "http://www.w3.org/2000/svg";
+const NODE = Object.fromEntries(GRAPH.nodes.map(n => [n.id, n]));
+const EDGE = Object.fromEntries(GRAPH.edges.map(e => [e.id, e]));
+const GROUP = Object.fromEntries(GRAPH.groups.map(g => [g.id, g]));
+const S = { mode: "step", order: "run", step: 0, data: true, fail: true, cuts: false,
+            folded: new Set(), panel: true, expanded: new Set() };
+let L = null, NUM = { n: {}, e: {} };
+
+const svg = document.getElementById("svg");
+const $ = id => document.getElementById(id);
+
+function el(tag, attrs, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs || {}) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;" }[c]));
+const cap1 = s => s[0].toUpperCase() + s.slice(1);
+function rich(s) {
+  return esc(s)
+    .replace(/\{@(\w+)\}/g, (m, id) => NUM.e[id] ? `<span class="ref" data-ref="e:${id}">edge ${NUM.e[id]}</span>` : "an edge")
+    .replace(/\{#(\w+)\}/g, (m, id) => `<span class="ref" data-ref="n:${id}">${esc(NODE[id].label)}</span>`)
+    .replace(/\{([^}|@#]+)(?:\|([^}]+))?\}/g, (m, k, d, at, str) => {
+      const def = GRAPH.glossary[k];
+      if (!def && isPlaceholder(str, at, m.length)) return m;
+      return def ? `<span class="term" tabindex="0" data-def="${esc(def)}">${d || k}</span>` : (d || k);
+    });
+}
+// A non-glossary {...} inside a path or name, like {project}/notes.md, stays literal. Mirrors graph_page.py.
+function isPlaceholder(str, at, len) {
+  const before = str[at - 1] || "", after = str.slice(at + len, at + len + 2);
+  return /[\w\/-]/.test(before) || after[0] === "/" || /^\.\w/.test(after);
+}
+function kindOf(n) {
+  if (n.kind) return n.kind;
+  return { model: "Agent", code: n.external ? "Outside service" : "Script", store: "Stored data", event: "Event", person: "Person" }[n.build];
+}
+function reasonName(r) { return `Reason ${r} · ${GRAPH.reasons[r].name}`; }
+function whyShort(n) {
+  if (!n.why) return null;
+  if (n.why.type === "start") return "Starting loop";
+  if (n.why.type === "earned") return `Reason ${n.why.main}` + ((n.why.also || []).length ? ` · also ${n.why.also.join(", ")}` : "");
+  return null;
+}
+function whyLabel(n) {
+  return n.why.type === "earned" ? whyShort(n) : n.why.type === "start" ? "Starting loop" : "Required by the job";
+}
+function whyChip(n) {
+  if (n.why.type === "start") return `<span class="rchip">Starting loop</span>`;
+  if (n.why.type === "required") return `<span class="rchip">Required by the job</span>`;
+  const also = n.why.also || [];
+  if (!also.length) return `<span class="rchip">${reasonName(n.why.main)}</span>`;
+  return `<span class="rchip"><span class="rl">Main:</span> ${reasonName(n.why.main)}</span> ` +
+    also.map(a => `<span class="rchip"><span class="rl">Also:</span> ${reasonName(a)}</span>`).join(" ");
+}
+
+/* ---------- visibility rules ---------- */
+function steps() { return GRAPH.steps[S.order]; }
+function revealIdx(id) {
+  const st = steps();
+  for (let i = 0; i < st.length; i++) if (st[i].nodes.includes(id)) return i;
+  return Infinity;
+}
+function edgeReveal(e) { return Math.max(revealIdx(e.from), revealIdx(e.to)); }
+function inLayout(n) {
+  if (n.ghost && !S.cuts) return false;
+  if (n.layer === "data" && !S.data) return false;
+  return true;
+}
+function mapId(id) {
+  const n = NODE[id];
+  return n && n.group && S.folded.has(n.group) ? "group:" + n.group : id;
+}
+function members(gid) { return GRAPH.nodes.filter(n => n.group === gid && inLayout(n)); }
+function riMapped(id) {
+  if (id.startsWith("group:")) return Math.min(...members(id.slice(6)).map(n => revealIdx(n.id)));
+  return revealIdx(id);
+}
+function nodeState(id) {
+  if (S.mode === "all") return "normal";
+  if (id.startsWith("group:")) {
+    const ris = members(id.slice(6)).map(n => revealIdx(n.id));
+    if (Math.min(...ris) > S.step) return "hidden";
+    return ris.includes(S.step) ? "current" : "past";
+  }
+  const ri = revealIdx(id);
+  return ri > S.step ? "hidden" : ri === S.step ? "current" : "past";
+}
+function edgeState(v, w) {
+  if (S.mode === "all") return "normal";
+  const a = riMapped(v), b = riMapped(w);
+  if (a > S.step || b > S.step) return "hidden";
+  return Math.max(a, b) === S.step ? "current" : "past";
+}
+function edgeOn(e) {
+  if (e.buildOnly) return false;
+  const layer = e.layer || "flow";
+  if (layer === "data" && !S.data) return false;
+  if (layer === "fail" && !S.fail) return false;
+  if (e.ghost && !S.cuts) return false;
+  return inLayout(NODE[e.from]) && inLayout(NODE[e.to]);
+}
+
+/* Numbers for nodes and letters for edges, in the order they appear in the current step order. */
+function numbering() {
+  const n = {}, e = {};
+  let k = 1, l = 0;
+  steps().forEach((st, i) => {
+    for (const id of st.nodes) n[id] = NODE[id].ghost ? "✕" : String(k++);
+    for (const ed of GRAPH.edges) if (ed.card && edgeReveal(ed) === i) e[ed.id] = String.fromCharCode(65 + l++);
+  });
+  return { n, e };
+}
+
+/* ---------- sizes ---------- */
+function dims(n) {
+  const [w, h] = { event: [164, 50], store: [156, 74], person: [150, 74] }[n.build] || [190, 64];
+  // Widen to fit the name and the second line, plus room for the corner tags.
+  const text = Math.max(n.label.length * 8.4, (n.sub || "").length * 6.3) + (n.build === "person" ? 56 : 36);
+  return [Math.max(w, Math.ceil(text)), h];
+}
+const labelW = (text, letter) => text.length * 6.1 + 16 + (letter ? 20 : 0);
+
+/* ---------- layout (dagre) ---------- */
+function layout() {
+  const g = new dagre.graphlib.Graph({ compound: true, multigraph: true });
+  g.setGraph({ rankdir: "TB", nodesep: 40, ranksep: 30, edgesep: 18, marginx: 60, marginy: 40 });
+  g.setDefaultEdgeLabel(() => ({}));
+  for (const n of GRAPH.nodes) {
+    if (!inLayout(n)) continue;
+    const id = mapId(n.id);
+    if (id !== n.id) { if (!g.hasNode(id)) g.setNode(id, { width: 204, height: 66 }); continue; }
+    const [w, h] = dims(n);
+    g.setNode(n.id, { width: w, height: h });
+    if (n.group) {
+      const cid = "cl:" + n.group;
+      if (!g.hasNode(cid)) g.setNode(cid, {});
+      g.setParent(n.id, cid);
+    }
+  }
+  const drawn = [], seen = new Set();
+  for (const e of GRAPH.edges) {
+    if (!edgeOn(e)) continue;
+    const v = mapId(e.from), w = mapId(e.to);
+    if (v === w) continue;
+    const remapped = v !== e.from || w !== e.to;
+    if (remapped) {
+      const key = `${v}>${w}|${e.layer || "flow"}|${e.style}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+    }
+    const lbl = remapped && !e.card ? null : (e.label || null);
+    g.setEdge(v, w, { width: lbl ? labelW(lbl, !!e.card) : 0, height: lbl ? 22 : 0, labelpos: "c" }, e.id);
+    drawn.push({ e, v, w, lbl });
+  }
+  dagre.layout(g);
+  return { g, drawn };
+}
+
+/* ---------- shapes ---------- */
+function rr(w, h, r) {
+  return `M${r},0 H${w - r} A${r},${r} 0 0 1 ${w},${r} V${h - r} A${r},${r} 0 0 1 ${w - r},${h} H${r} A${r},${r} 0 0 1 0,${h - r} V${r} A${r},${r} 0 0 1 ${r},0 Z`;
+}
+function shapePath(build, w, h) {
+  switch (build) {
+    case "model": return rr(w, h, 12);
+    case "code": return rr(w, h, 3);
+    case "event": return rr(w, h, h / 2);
+    case "store": { const ry = 9; return `M0,${ry} A${w / 2},${ry} 0 0 1 ${w},${ry} V${h - ry} A${w / 2},${ry} 0 0 1 0,${h - ry} Z`; }
+    case "person": { const c = Math.min(w, h) * 0.27; return `M${c},0 H${w - c} L${w},${c} V${h - c} L${w - c},${h} H${c} L0,${h - c} V${c} Z`; }
+  }
+}
+/* Pull the arrow tip back from the target so it never sinks into the shape. */
+function trimEnd(pts, d) {
+  const a = pts[pts.length - 2], b = pts[pts.length - 1];
+  const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
+  const k = Math.min(d, len - 1) / len;
+  return [...pts.slice(0, -1), { x: b.x - dx * k, y: b.y - dy * k }];
+}
+function tipGap(id) {
+  const n = NODE[id];
+  return n && (n.build === "store" || n.build === "person") ? 9 : 5;
+}
+function smooth(pts) {
+  let d = `M${pts[0].x},${pts[0].y}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2;
+    const c1x = p1.x + (p2.x - p0.x) / 6, c1y = p1.y + (p2.y - p0.y) / 6;
+    const c2x = p2.x - (p3.x - p1.x) / 6, c2y = p2.y - (p3.y - p1.y) / 6;
+    d += ` C${c1x},${c1y} ${c2x},${c2y} ${p2.x},${p2.y}`;
+  }
+  return d;
+}
+
+/* ---------- render diagram ---------- */
+function drawLabel(parent, x, y, text, letter) {
+  const w = labelW(text, letter);
+  const g = el("g", { transform: `translate(${x - w / 2},${y - 11})` }, parent);
+  el("rect", { width: w, height: 22, rx: 11, class: "lbl-bg" }, g);
+  let tx = 8;
+  if (letter) {
+    el("circle", { cx: 16, cy: 11, r: 8, class: "lt-c" }, g);
+    el("text", { x: 16, y: 15, class: "lt", "text-anchor": "middle" }, g).textContent = letter;
+    tx = 29;
+  }
+  el("text", { x: tx, y: 15, class: "lbl" }, g).textContent = text;
+}
+function pill(g, x, y, text, rectCls, textCls) {
+  const tw = text.length * 6.4 + 14;
+  el("rect", { x, y, width: tw, height: 18, rx: 9, class: rectCls }, g);
+  el("text", { x: x + tw / 2, y: y + 13, class: textCls, "text-anchor": "middle" }, g).textContent = text;
+}
+
+function drawNode(parent, id, box) {
+  const st = nodeState(id);
+  const { x, y, width: w, height: h } = box;
+  const isGroup = id.startsWith("group:");
+  const n = isGroup ? null : NODE[id];
+  const cls = ["node", st];
+  if (isGroup) cls.push("groupnode");
+  else { if (n.external) cls.push("external"); if (n.ghost) cls.push("ghost"); }
+  const g = el("g", { class: cls.join(" "), transform: `translate(${x - w / 2},${y - h / 2})`, "data-id": id, tabindex: 0 }, parent);
+
+  if (isGroup) {
+    const grp = GROUP[id.slice(6)];
+    el("path", { d: rr(w, h, 12), class: "shape" }, g);
+    el("path", { d: `M5,5 h${w - 10} v${h - 10} h-${w - 10} Z`, class: "inner" }, g);
+    el("text", { x: w / 2, y: h / 2 - 3, class: "t1", "text-anchor": "middle" }, g).textContent = grp.label;
+    el("text", { x: w / 2, y: h / 2 + 13, class: "t2", "text-anchor": "middle" }, g).textContent =
+      `${members(grp.id).filter(m => !m.ghost).length} nodes · click to open`;
+    return g;
+  }
+  g.style.setProperty("--c", `var(--r-${n.role})`);
+  if (n.count) for (const o of [8, 4]) el("path", { d: shapePath(n.build, w, h), class: "shape stack", transform: `translate(${o},${o})` }, g);
+  el("path", { d: shapePath(n.build, w, h), class: "shape" }, g);
+  if (n.build === "store") el("path", { d: `M0,9 A${w / 2},9 0 0 0 ${w},9`, class: "rim" }, g);
+  const cy = h / 2 + (n.build === "store" ? 4 : 0) - 2;
+  el("text", { x: w / 2, y: cy - 3, class: "t1", "text-anchor": "middle" }, g).textContent = n.label;
+  el("text", { x: w / 2, y: cy + 13, class: "t2", "text-anchor": "middle" }, g).textContent = n.sub;
+  const num = NUM.n[n.id] || "";
+  const bw = Math.max(22, num.length * 7 + 12);
+  el("rect", { x: -6, y: -9, width: bw, height: 20, rx: 10, class: "badge-c" }, g);
+  el("text", { x: -6 + bw / 2, y: 5, class: "badge-t", "text-anchor": "middle" }, g).textContent = num;
+  if (n.tag) { const tw = n.tag.length * 6.4 + 14; pill(g, w - tw + 6, -9, n.tag, "tag-r", "tag-t"); }
+  const why = whyShort(n);
+  if (why) { const tw = why.length * 6.4 + 14; pill(g, w - tw + 6, h - 9, why, "why-r", "why-t"); }
+  return g;
+}
+
+function render() {
+  const { g, drawn } = L;
+  svg.innerHTML = "";
+  const gw = g.graph().width, gh = g.graph().height;
+  svg.setAttribute("viewBox", `0 0 ${gw} ${gh}`);
+  /* Fit a wide graph to the stage, but never shrink it below MIN_SCALE. Past that, the stage scrolls sideways. */
+  const MIN_SCALE = 0.85, avail = $("stage").clientWidth - 2;
+  svg.style.width = (gw <= avail ? gw : Math.max(avail, gw * MIN_SCALE)) + "px";
+
+  const defs = el("defs", {}, svg);
+  for (const k of ["ink", "past", "fail", "ghost"]) {
+    const m = el("marker", { id: "m-" + k, viewBox: "0 0 10 10", refX: 10, refY: 5, markerWidth: 9, markerHeight: 9,
+      markerUnits: "userSpaceOnUse", orient: "auto-start-reverse" }, defs);
+    el("path", { d: "M0,0 L10,5 L0,10 z" }, m);
+  }
+  const clusterLayer = el("g", {}, svg), edgeLayer = el("g", {}, svg), nodeLayer = el("g", {}, svg);
+
+  for (const grp of GRAPH.groups) {
+    const cid = "cl:" + grp.id;
+    if (!g.hasNode(cid)) continue;
+    const c = g.node(cid);
+    const visible = S.mode === "all" || members(grp.id).some(n => revealIdx(n.id) <= S.step);
+    const cg = el("g", { class: "cluster" + (visible ? "" : " hidden") }, clusterLayer);
+    const pad = 10, x = c.x - c.width / 2 - pad, y = c.y - c.height / 2 - pad - 12;
+    el("rect", { x, y, width: c.width + pad * 2, height: c.height + pad * 2 + 12, rx: 16, class: "box" }, cg);
+    el("text", { x: x + 14, y: y + 18, class: "cl-l" }, cg).textContent = grp.label;
+    const b = el("text", { x: x + 14 + grp.label.length * 8.2 + 10, y: y + 18, class: "cl-b", tabindex: 0 }, cg);
+    b.textContent = "fold";
+    b.addEventListener("click", () => { S.folded.add(grp.id); relayout(); });
+  }
+
+  for (const d of drawn) {
+    const { e, v, w, lbl } = d;
+    const ed = g.edge(v, w, e.id);
+    const st = edgeState(v, w);
+    const fail = e.layer === "fail";
+    const cls = ["edge", e.style, st];
+    if (fail) cls.push("fail");
+    if (e.ghost) cls.push("ghost");
+    const ge = el("g", { class: cls.join(" "), "data-id": e.id, "data-v": v, "data-w": w }, edgeLayer);
+    const path = smooth(trimEnd(ed.points, tipGap(w)));
+    el("path", { d: path, class: "hit" }, ge);
+    const mk = e.ghost ? "ghost" : st === "past" ? "past" : fail ? "fail" : "ink";
+    el("path", { d: path, class: "ln", "marker-end": `url(#m-${mk})` }, ge);
+    if (lbl) drawLabel(ge, ed.x, ed.y, lbl, NUM.e[e.id]);
+  }
+
+  if (S.mode === "step" && S.order === "build") {
+    for (const e of GRAPH.edges.filter(x => x.buildOnly)) {
+      if (S.step > e.until) continue;
+      const v = mapId(e.from), w = mapId(e.to);
+      if (!g.hasNode(v) || !g.hasNode(w) || riMapped(v) > S.step || riMapped(w) > S.step) continue;
+      const a = g.node(v), b = g.node(w);
+      const x1 = a.x, y1 = a.y + a.height / 2, x2 = b.x, y2 = b.y - b.height / 2 - tipGap(w);
+      const dy = Math.max(50, (y2 - y1) * 0.45);
+      const cur = Math.max(riMapped(v), riMapped(w)) === S.step;
+      const ge = el("g", { class: `edge solid temp ${cur ? "current" : "past"}`, "data-id": e.id, "data-v": v, "data-w": w }, edgeLayer);
+      const path = `M${x1},${y1} C${x1},${y1 + dy} ${x2},${y2 - dy} ${x2},${y2}`;
+      el("path", { d: path, class: "hit" }, ge);
+      el("path", { d: path, class: "ln", "marker-end": `url(#m-${cur ? "ink" : "past"})` }, ge);
+      drawLabel(ge, (x1 + x2) / 2, (y1 + y2) / 2, e.label);
+    }
+  }
+
+  for (const id of g.nodes()) {
+    if (id.startsWith("cl:")) continue;
+    drawNode(nodeLayer, id, g.node(id));
+  }
+  wireDiagram();
+}
+
+/* ---------- explainer panel ---------- */
+function nodeCardVisible(n) {
+  if (!inLayout(n)) return false;
+  return S.mode === "all" || revealIdx(n.id) <= S.step;
+}
+function edgeCardVisible(e) {
+  if (!e.card || !edgeOn(e)) return false;
+  return S.mode === "all" || edgeReveal(e) <= S.step;
+}
+/* Cards grouped by the step where each element first appears. */
+function cardGroups() {
+  const out = [];
+  steps().forEach((st, i) => {
+    if (S.mode === "step" && i > S.step) return;
+    const ids = [];
+    for (const id of st.nodes) if (!NODE[id].ghost && nodeCardVisible(NODE[id])) ids.push("n:" + id);
+    for (const e of GRAPH.edges) if (edgeReveal(e) === i && edgeCardVisible(e)) ids.push("e:" + e.id);
+    for (const id of st.nodes) if (NODE[id].ghost && nodeCardVisible(NODE[id])) ids.push("n:" + id);
+    if (ids.length) out.push({ i, title: st.title, ids });
+  });
+  return out;
+}
+const allCards = () => cardGroups().flatMap(g => g.ids);
+function currentCards() {
+  if (S.mode === "all") return [];
+  return (cardGroups().find(g => g.i === S.step) || { ids: [] }).ids;
+}
+const row = (title, html) => html ? `<h4>${title}</h4>${html}` : "";
+const para = html => `<p>${html}</p>`;
+
+function renderPanel() {
+  const cap = $("caption");
+  const orderName = S.order === "run" ? "How it runs" : "How we built it";
+  if (S.mode === "step") {
+    const st = steps()[S.step];
+    const chips = st.nodes.map(id => NODE[id]).filter(n => n.why && inLayout(n))
+      .map(n => `<span class="rchip">${esc(n.label)}: ${whyLabel(n)}</span>`).join("");
+    cap.innerHTML = `<div class="caption"><div class="cap-k">Step ${S.step + 1} of ${steps().length} · ${orderName}</div>
+      <div class="cap-t">${esc(st.title)}</div><p>${rich(st.text)}</p>${chips ? `<div class="cap-why">${chips}</div>` : ""}</div>`;
+  } else {
+    cap.innerHTML = `<div class="caption"><div class="cap-k">Whole graph · numbered by ${orderName.toLowerCase()}</div>
+      <p>${rich("Hover any {node} or {edge} to link it with its explainer.")}</p></div>`;
+  }
+
+  const wrap = $("cards");
+  wrap.innerHTML = "";
+  for (const grp of cardGroups()) {
+    const div = document.createElement("div");
+    div.className = "stepdiv";
+    div.textContent = `Step ${grp.i + 1} · ${grp.title}`;
+    wrap.appendChild(div);
+    for (const cid of grp.ids) wrap.appendChild(buildCard(cid));
+  }
+}
+
+function buildCard(cid) {
+  const kind = cid.slice(0, 1), id = cid.slice(2);
+  const art = document.createElement("article");
+  art.className = "card" + (S.expanded.has(cid) ? " open" : "");
+  art.dataset.card = cid;
+  let badge, kicker, title, head, body = "";
+  if (kind === "n") {
+    const n = NODE[id];
+    art.style.setProperty("--c", `var(--r-${n.role})`);
+    badge = NUM.n[id];
+    head = n.card.headline;
+    title = `${esc(n.label)}<span class="kind">${esc(kindOf(n))}</span>`;
+    if (n.ghost) {
+      art.classList.add("ghostcard");
+      kicker = "Cut node";
+      body = row("Why it was cut", para(rich(n.card.cut)));
+    } else {
+      kicker = `Node ${badge} · ${GRAPH.roles[n.role].name}`;
+      body = row("What it does", para(rich(n.card.what)));
+      if (n.card.table) body += `<table><tr><th>Data</th><th>Written only by</th><th>Read by</th></tr>${
+        n.card.table.map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</table>`;
+      body += row("Why it exists", para(whyChip(n)) + para(rich(n.why.text)))
+        + row("If it fails", para(rich(n.card.fail))) + row("Reads and writes", para(rich(n.card.rw)));
+    }
+  } else {
+    const e = EDGE[id];
+    art.classList.add("edgecard");
+    if (e.layer === "fail") art.classList.add("failcard");
+    badge = NUM.e[id];
+    kicker = `Edge ${badge} · ${esc(e.kind || "Edge")}`;
+    title = `${esc(NODE[e.from].label)} → ${esc(NODE[e.to].label)}`;
+    head = e.card.headline;
+    body = row("What it means", para(rich(e.card.text)));
+  }
+  art.innerHTML = `<button class="card-head" aria-expanded="${S.expanded.has(cid)}"><span class="badge">${esc(badge)}</span>
+    <span class="chd"><span class="ck">${kicker}</span><span class="ct">${title}</span><span class="chl">${rich(head)}</span></span>
+    <span class="chev">▸</span></button><div class="card-body">${body}</div>`;
+  art.querySelector(".card-head").addEventListener("click", () => {
+    S.expanded.has(cid) ? S.expanded.delete(cid) : S.expanded.add(cid);
+    art.classList.toggle("open");
+    art.querySelector(".card-head").setAttribute("aria-expanded", S.expanded.has(cid));
+  });
+  art.addEventListener("mouseenter", () => highlightRef(cid));
+  art.addEventListener("mouseleave", clearHi);
+  return art;
+}
+
+/* ---------- hover linking ---------- */
+function clearHi() {
+  svg.classList.remove("dim");
+  document.querySelectorAll(".hi").forEach(x => x.classList.remove("hi"));
+}
+function hi(nodeIds, edgeIds, cardIds) {
+  svg.classList.add("dim");
+  for (const id of nodeIds) svg.querySelector(`.node[data-id="${CSS.escape(id)}"]`)?.classList.add("hi");
+  for (const id of edgeIds) svg.querySelector(`.edge[data-id="${CSS.escape(id)}"]`)?.classList.add("hi");
+  for (const id of cardIds) document.querySelector(`.card[data-card="${CSS.escape(id)}"]`)?.classList.add("hi");
+}
+function edgesTouching(mid) {
+  return [...svg.querySelectorAll(".edge")].filter(x => x.dataset.v === mid || x.dataset.w === mid).map(x => x.dataset.id);
+}
+function cardsForMapped(mid) {
+  if (mid.startsWith("group:")) return members(mid.slice(6)).map(n => "n:" + n.id);
+  return ["n:" + mid];
+}
+function highlightRef(ref) {
+  clearHi();
+  const kind = ref.slice(0, 1), id = ref.slice(2);
+  if (kind === "n") { const mid = mapId(id); hi([mid], edgesTouching(mid), ["n:" + id]); }
+  else { const e = EDGE[id]; hi([mapId(e.from), mapId(e.to)], [id], ["e:" + id]); }
+}
+function highlightNodes(ids) {
+  clearHi();
+  hi([...new Set(ids.map(mapId))], [], ids.map(id => "n:" + id));
+}
+function wireDiagram() {
+  svg.querySelectorAll(".node").forEach(nd => {
+    const mid = nd.dataset.id;
+    nd.addEventListener("mouseenter", () => hi([mid], edgesTouching(mid), cardsForMapped(mid)));
+    nd.addEventListener("mouseleave", clearHi);
+    nd.addEventListener("click", () => {
+      if (mid.startsWith("group:")) { S.folded.delete(mid.slice(6)); relayout(); return; }
+      const cid = "n:" + mid;
+      setTab("cards");
+      S.expanded.add(cid);
+      if (!S.panel) togglePanel();
+      renderPanel();
+      document.querySelector(`.card[data-card="${CSS.escape(cid)}"]`)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    });
+  });
+  svg.querySelectorAll(".edge").forEach(ed => {
+    const e = EDGE[ed.dataset.id];
+    ed.addEventListener("mouseenter", () => hi([ed.dataset.v, ed.dataset.w], [ed.dataset.id], e.card ? ["e:" + e.id] : []));
+    ed.addEventListener("mouseleave", clearHi);
+  });
+}
+document.addEventListener("mouseover", ev => { const r = ev.target.closest(".ref"); if (r) highlightRef(r.dataset.ref); });
+document.addEventListener("mouseout", ev => { if (ev.target.closest(".ref")) clearHi(); });
+
+/* ---------- glossary tooltip ---------- */
+const tip = $("tip");
+function showTip(t) {
+  tip.textContent = t.dataset.def;
+  const r = t.getBoundingClientRect();
+  tip.classList.add("show");
+  const tw = tip.offsetWidth, th = tip.offsetHeight;
+  const left = Math.min(Math.max(8, r.left + r.width / 2 - tw / 2), window.innerWidth - tw - 8);
+  let top = r.top - th - 8;
+  if (top < 8) top = r.bottom + 8;
+  tip.style.left = left + "px"; tip.style.top = top + "px";
+}
+document.addEventListener("mouseover", ev => { const t = ev.target.closest(".term"); if (t) showTip(t); });
+document.addEventListener("mouseout", ev => { if (ev.target.closest(".term")) tip.classList.remove("show"); });
+document.addEventListener("focusin", ev => { const t = ev.target.closest(".term"); if (t) showTip(t); });
+document.addEventListener("focusout", ev => { if (ev.target.closest(".term")) tip.classList.remove("show"); });
+
+/* ---------- legend ---------- */
+function mini(w, h, draw) {
+  const s = document.createElementNS(NS, "svg");
+  s.setAttribute("width", w); s.setAttribute("height", h); s.setAttribute("viewBox", `0 0 ${w} ${h}`);
+  draw(s);
+  return s.outerHTML;
+}
+function buildLegend() {
+  const defs = ["graph", "node", "edge", "shared state"].map(k =>
+    `<p class="def"><b>${cap1(k)}</b>: ${esc(GRAPH.glossary[k])}</p>`).join("")
+    + `<p class="def" style="color:var(--muted)">Numbers mark nodes. Letters mark edges that have an explainer. Both count up in the order things appear.</p>`;
+
+  const real = GRAPH.nodes.filter(n => !n.ghost && n.why);
+  const names = list => list.map(n => esc(n.label)).join(", ");
+  const rrow = (label, desc, list, extra) => `<div class="rrow" data-nodes="${list.map(n => n.id).join(",")}"><b>${label}</b>
+    <span class="rn">· ${desc}</span><br>${list.length ? names(list) + (extra || "") : `<span class="none">Not needed in this graph.</span>`}</div>`;
+  let reasons = rrow("Starting loop", "the one node the graph grew from; it needs no reason", real.filter(n => n.why.type === "start"));
+  for (const r of Object.keys(GRAPH.reasons)) {
+    const main = real.filter(n => n.why.type === "earned" && n.why.main == r);
+    const also = real.filter(n => n.why.type === "earned" && (n.why.also || []).includes(+r));
+    reasons += rrow(reasonName(r), esc(GRAPH.reasons[r].desc), [...main, ...also],
+      also.length ? ` <span class="rn">(second reason for ${names(also)})</span>` : "");
+  }
+  reasons += rrow("Required by the job", "the job can't run without it, so it isn't split off from the loop", real.filter(n => n.why.type === "required"));
+
+  const colors = Object.entries(GRAPH.roles).map(([k, r]) =>
+    `<div class="lrow">${mini(26, 16, s => el("rect", { width: 26, height: 16, rx: 5, fill: `var(--r-${k})` }, s))}<span><b>${r.name}</b>: ${r.desc}</span></div>`).join("")
+    + `<div class="lrow">${mini(26, 16, s => el("rect", { width: 26, height: 16, rx: 5, fill: "var(--past-fill)", stroke: "var(--past-edge)" }, s))}<span><b>Gray</b>: earlier step, or cut</span></div>`;
+  const shapeRow = (build, text, ext) => `<div class="lrow">${mini(52, 30, s => {
+    const pth = el("path", { d: shapePath(build, 50, 28), transform: "translate(1,1)", fill: "var(--surface)", stroke: "var(--ink)", "stroke-width": ext ? 1.6 : 1.2 }, s);
+    if (ext) pth.setAttribute("stroke-dasharray", "5 3");
+    if (build === "store") el("path", { d: "M1,10 A25,9 0 0 0 51,10", fill: "none", stroke: "var(--ink)", "stroke-width": 1.2 }, s);
+  })}<span>${text}</span></div>`;
+  const shapes = shapeRow("model", "<b>Rounded</b>: an agent (uses a model)") + shapeRow("code", "<b>Square corners</b>: a script (plain code)")
+    + shapeRow("store", "<b>Cylinder</b>: stored data") + shapeRow("event", "<b>Pill</b>: an event")
+    + shapeRow("person", "<b>Octagon</b>: a person") + shapeRow("code", "<b>Dashed outline</b>: outside your control", true);
+  const lineRow = (dash, color, text, cap, sw) => `<div class="lrow">${mini(60, 12, s => {
+    const l = el("line", { x1: 2, y1: 6, x2: 58, y2: 6, stroke: color, "stroke-width": sw || 2 }, s);
+    if (dash) l.setAttribute("stroke-dasharray", dash);
+    if (cap) l.setAttribute("stroke-linecap", "round");
+  })}<span>${text}</span></div>`;
+  const lines = lineRow(null, "var(--edge)", "<b>Solid</b>: always happens")
+    + lineRow("7 5", "var(--edge)", "<b>Dashed</b>: only sometimes. The label gives the rule.")
+    + lineRow("0.5 5.5", "var(--edge)", "<b>Dotted</b>: data moving. The arrow points the way it travels, and the label names the data.", true, 2.6)
+    + lineRow("7 5", "var(--fail)", "<b>Red</b>: a failure path");
+
+  $("legendBody").innerHTML = `<div><h3>The basics</h3>${defs}</div>
+    <div><h3>Why each node exists</h3>${reasons}</div>
+    <div><h3>Nodes: color = its job</h3>${colors}</div>
+    <div><h3>Nodes: shape = what it is</h3>${shapes}</div>
+    <div><h3>Edges: line = how sure</h3>${lines}</div>`;
+  document.querySelectorAll(".rrow").forEach(r => {
+    const ids = r.dataset.nodes ? r.dataset.nodes.split(",") : [];
+    r.addEventListener("mouseenter", () => { if (ids.length) highlightNodes(ids.filter(id => inLayout(NODE[id]))); });
+    r.addEventListener("mouseleave", clearHi);
+  });
+}
+
+/* ---------- controls ---------- */
+function syncControls() {
+  const n = steps().length;
+  document.querySelectorAll("#orderSeg .btn").forEach(b => b.classList.toggle("on", S.mode === "step" && b.dataset.order === S.order));
+  $("counter").textContent = S.mode === "step" ? `Step ${S.step + 1} of ${n}` : "All steps";
+  $("prev").disabled = S.mode !== "step" || S.step === 0;
+  $("next").disabled = S.mode !== "step" || S.step === n - 1;
+  $("revealAll").classList.toggle("on", S.mode === "all");
+  $("hideData").checked = !S.data; $("hideFail").checked = !S.fail; $("showCuts").checked = S.cuts;
+}
+function redraw() { NUM = numbering(); render(); renderPanel(); syncControls(); }
+function relayout() { L = layout(); redraw(); }
+function goStep(i) {
+  S.mode = "step";
+  S.step = Math.max(0, Math.min(steps().length - 1, i));
+  NUM = numbering();
+  S.expanded = new Set(currentCards());
+  redraw();
+}
+function setTab(t) {
+  document.querySelectorAll(".tab").forEach(b => b.classList.toggle("on", b.dataset.tab === t));
+  $("tabCards").hidden = t !== "cards";
+  $("tabHowto").hidden = t !== "howto";
+}
+document.querySelectorAll(".tab").forEach(b => b.addEventListener("click", () => setTab(b.dataset.tab)));
+function togglePanel() {
+  S.panel = !S.panel;
+  $("main").classList.toggle("nopanel", !S.panel);
+  $("hidePanel").setAttribute("aria-pressed", String(!S.panel));
+}
+
+document.querySelectorAll("#orderSeg .btn").forEach(b => b.addEventListener("click", () => {
+  S.order = b.dataset.order;
+  S.cuts = S.order === "build";
+  L = layout();
+  goStep(0);
+}));
+$("prev").addEventListener("click", () => { setTab("cards"); goStep(S.step - 1); });
+$("next").addEventListener("click", () => { setTab("cards"); goStep(S.step + 1); });
+$("revealAll").addEventListener("click", () => { S.mode = "all"; S.expanded = new Set(allCards()); redraw(); });
+$("revealAllCollapsed").addEventListener("click", () => { S.mode = "all"; S.expanded = new Set(); redraw(); });
+$("expandAll").addEventListener("click", () => { setTab("cards"); S.expanded = new Set(allCards()); renderPanel(); });
+$("collapseAll").addEventListener("click", () => { setTab("cards"); S.expanded = new Set(); renderPanel(); });
+$("hidePanel").addEventListener("click", togglePanel);
+$("hideData").addEventListener("change", ev => { S.data = !ev.target.checked; relayout(); });
+$("hideFail").addEventListener("change", ev => { S.fail = !ev.target.checked; relayout(); });
+$("showCuts").addEventListener("change", ev => { S.cuts = ev.target.checked; relayout(); });
+window.addEventListener("resize", () => { clearTimeout(window.__rz); window.__rz = setTimeout(redraw, 150); });
+document.addEventListener("keydown", ev => {
+  if (ev.target.closest("input, textarea")) return;
+  if (ev.key === "ArrowRight" && S.mode === "step") { setTab("cards"); goStep(S.step + 1); }
+  if (ev.key === "ArrowLeft" && S.mode === "step") { setTab("cards"); goStep(S.step - 1); }
+});
+
+$("title").textContent = GRAPH.title;
+$("subtitle").textContent = GRAPH.subtitle;
+document.title = GRAPH.title;
+buildLegend();
+L = layout();
+goStep(0);
+setTab("howto");
+</script>
+</body>
+</html>

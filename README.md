@@ -5,6 +5,12 @@ New to Claude skills? Check out [Anthropic's docs on Claude Skills](https://code
 
 ## Tools
 
+### Design
+
+| Tool | What it does | Notes |
+| ---- | ------------ | ----- |
+| [map-build](tools/map-build/) | Walks you through a build as a graph (nodes, edges, shared state, checkers, failure paths) before any spec exists, starting from one loop and making every extra part earn its place. A skeptic agent reviews the design; you get a note plus an interactive HTML page. | manual-only · bundles an agent · Python 3 |
+
 ### Skill development
 
 | Tool                                 | What it does                                                                                                                                              | Notes                        |
@@ -54,6 +60,7 @@ Some tools assume a particular environment. Each tool's own `README.md` document
 - **Region-configurable** — `fetch-ai-news` and `find-events` default to Canadian and Toronto sources. Both document how to point them elsewhere.
 - **Bundled scripts** — `find-events` includes a cron wrapper shell script that expects `claude` on your PATH.
 - **Plugin install** — `check-cc-health` is a plugin, not a standalone skill. It requires the local plugin install flow (`claude plugin marketplace add` + `claude plugin install`). See its README for the full steps.
+- **Bundled agent** — `map-build` ships a `skeptic` agent in its `agents/` folder. Copy it to `~/.claude/agents/` too, or the review step can't run. Its README has the steps.
 - **Subagent-heavy** — `audit-config` spawns eight parallel scanner agents plus one reasoning agent per run. It targets Sonnet for scanning and Opus for the cross-layer reasoning; without those models it falls back to your session model.
 
 ## Maintenance and contributions
